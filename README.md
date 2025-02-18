@@ -32,8 +32,8 @@ Application Symfony de gestion d'évènements musicaux, comportant une partie **
 1. **Cloner le repository :**
 
    ```bash
-   git clone https://github.com/votre-utilisateur/nom-du-repository.git
-   cd nom-du-repository
+   git clone https://github.com/ErblinHH/TP1-Symfony
+   cd TP1-Symfony
    ```
 
 2. **Installer les dépendances :**
