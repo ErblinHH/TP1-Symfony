@@ -16,49 +16,31 @@ class Event
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private ?int $idEvent = null;
-
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $date = null;
 
+    #[ORM\ManyToOne(inversedBy: 'createdEvents')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $creator = null;
+
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'attendedEvents')]
+    private Collection $attendees;
+
     #[ORM\ManyToOne(inversedBy: 'event')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Artiste $artiste = null;
 
-    #[ORM\ManyToOne(inversedBy: 'event')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $idUser = null;
-
-    /**
-     * @var Collection<int, User>
-     */
-    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'registeredEvent')]
-    private Collection $users;
-
     public function __construct()
     {
-        $this->users = new ArrayCollection();
+        $this->attendees = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getIdEvent(): ?int
-    {
-        return $this->idEvent;
-    }
-
-    public function setIdEvent(int $idEvent): static
-    {
-        $this->idEvent = $idEvent;
-
-        return $this;
     }
 
     public function getName(): ?string
@@ -69,7 +51,6 @@ class Event
     public function setName(?string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
@@ -81,7 +62,42 @@ class Event
     public function setDate(?\DateTimeInterface $date): static
     {
         $this->date = $date;
+        return $this;
+    }
 
+    public function getCreator(): ?User
+    {
+        return $this->creator;
+    }
+
+    public function setCreator(?User $creator): static
+    {
+        $this->creator = $creator;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getAttendees(): Collection
+    {
+        return $this->attendees;
+    }
+
+    public function addAttendee(User $user): static
+    {
+        if (!$this->attendees->contains($user)) {
+            $this->attendees->add($user);
+            $user->addAttendedEvent($this);
+        }
+        return $this;
+    }
+
+    public function removeAttendee(User $user): static
+    {
+        if ($this->attendees->removeElement($user)) {
+            $user->removeAttendedEvent($this);
+        }
         return $this;
     }
 
@@ -93,46 +109,6 @@ class Event
     public function setArtiste(?Artiste $artiste): static
     {
         $this->artiste = $artiste;
-
-        return $this;
-    }
-
-    public function getIdUser(): ?User
-    {
-        return $this->idUser;
-    }
-
-    public function setIdUser(?User $idUser): static
-    {
-        $this->idUser = $idUser;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
-    public function getUsers(): Collection
-    {
-        return $this->users;
-    }
-
-    public function addUser(User $user): static
-    {
-        if (!$this->users->contains($user)) {
-            $this->users->add($user);
-            $user->addRegisteredEvent($this);
-        }
-
-        return $this;
-    }
-
-    public function removeUser(User $user): static
-    {
-        if ($this->users->removeElement($user)) {
-            $user->removeRegisteredEvent($this);
-        }
-
         return $this;
     }
 }

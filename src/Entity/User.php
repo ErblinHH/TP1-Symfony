@@ -6,55 +6,48 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: '`user`')]
-class User
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180, unique: true)]
-    private string $username;
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 180)]
     private ?string $email = null;
 
-    #[ORM\Column(length: 255)]
+    /**
+     * @var list<string> The user roles
+     */
+    #[ORM\Column]
+    private array $roles = [];
+
+    /**
+     * @var string The hashed password
+     */
+    #[ORM\Column]
     private ?string $password = null;
 
-    /**
-     * @var Collection<int, Event>
-     */
-    #[ORM\OneToMany(targetEntity: Event::class, mappedBy: 'idUser')]
-    private Collection $event;
+    #[ORM\OneToMany(mappedBy: 'creator', targetEntity: Event::class, orphanRemoval: true)]
+    private Collection $createdEvents;
 
-    /**
-     * @var Collection<int, Event>
-     */
-    #[ORM\ManyToMany(targetEntity: Event::class, inversedBy: 'users')]
-    private Collection $registeredEvent;
-
-    #[ORM\Column]
-    private array $role = [];
+    #[ORM\ManyToMany(targetEntity: Event::class, mappedBy: 'attendees')]
+    private Collection $attendedEvents;
 
     public function __construct()
     {
-        $this->event = new ArrayCollection();
-        $this->registeredEvent = new ArrayCollection();
+        $this->createdEvents = new ArrayCollection();
+        $this->attendedEvents = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(int $id): static
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getEmail(): ?string
@@ -65,7 +58,24 @@ class User
     public function setEmail(string $email): static
     {
         $this->email = $email;
+        return $this;
+    }
 
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        $roles[] = 'ROLE_USER';
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
         return $this;
     }
 
@@ -77,84 +87,63 @@ class User
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
         return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Clear sensitive temporary data if needed
     }
 
     /**
      * @return Collection<int, Event>
      */
-    public function getEvent(): Collection
+    public function getCreatedEvents(): Collection
     {
-        return $this->event;
+        return $this->createdEvents;
     }
 
-    public function addEvent(Event $event): static
+    public function addCreatedEvent(Event $event): static
     {
-        if (!$this->event->contains($event)) {
-            $this->event->add($event);
-            $event->setIdUser($this);
+        if (!$this->createdEvents->contains($event)) {
+            $this->createdEvents->add($event);
+            $event->setCreator($this);
         }
-
         return $this;
     }
 
-    public function removeEvent(Event $event): static
+    public function removeCreatedEvent(Event $event): static
     {
-        if ($this->event->removeElement($event)) {
-            // set the owning side to null (unless already changed)
-            if ($event->getIdUser() === $this) {
-                $event->setIdUser(null);
+        if ($this->createdEvents->removeElement($event)) {
+            if ($event->getCreator() === $this) {
+                $event->setCreator(null);
             }
         }
-
         return $this;
     }
 
     /**
      * @return Collection<int, Event>
      */
-    public function getRegisteredEvent(): Collection
+    public function getAttendedEvents(): Collection
     {
-        return $this->registeredEvent;
+        return $this->attendedEvents;
     }
 
-    public function addRegisteredEvent(Event $registeredEvent): static
+    public function addAttendedEvent(Event $event): static
     {
-        if (!$this->registeredEvent->contains($registeredEvent)) {
-            $this->registeredEvent->add($registeredEvent);
+        if (!$this->attendedEvents->contains($event)) {
+            $this->attendedEvents->add($event);
+            $event->addAttendee($this);
         }
-
         return $this;
     }
 
-    public function removeRegisteredEvent(Event $registeredEvent): static
+    public function removeAttendedEvent(Event $event): static
     {
-        $this->registeredEvent->removeElement($registeredEvent);
-
-        return $this;
-    }
-
-    public function getRole(): array
-    {
-        return $this->role;
-    }
-
-    public function setRole(array $role): static
-    {
-        $this->role = $role;
-
-        return $this;
-    }
-
-    public function getUsername(): string
-    {
-        return $this->username;
-    }
-
-    public function setUsername(string $username): self
-    {
-        $this->username = $username;
+        if ($this->attendedEvents->removeElement($event)) {
+            $event->removeAttendee($this);
+        }
         return $this;
     }
 }
