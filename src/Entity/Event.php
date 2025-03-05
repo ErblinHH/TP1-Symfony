@@ -73,6 +73,9 @@ class Event
     public function setCreator(?User $creator): static
     {
         $this->creator = $creator;
+        if ($creator !== null) {
+            $this->addAttendee($creator);
+        }
         return $this;
     }
 
