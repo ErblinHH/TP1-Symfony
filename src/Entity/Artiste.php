@@ -27,8 +27,9 @@ class Artiste
     /**
      * @var Collection<int, Event>
      */
-    #[ORM\OneToMany(targetEntity: Event::class, mappedBy: 'artiste',cascade: ['remove'])]
-    private Collection $event;
+    #[ORM\OneToMany(targetEntity: Event::class, mappedBy: 'artiste', cascade: ['remove'])]
+    private Collection $events;
+
 
     public function __construct()
     {

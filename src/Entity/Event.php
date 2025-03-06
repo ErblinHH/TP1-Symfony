@@ -29,9 +29,10 @@ class Event
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'attendedEvents')]
     private Collection $attendees;
 
-    #[ORM\ManyToOne(inversedBy: 'event')]
+    #[ORM\ManyToOne(targetEntity: Artiste::class, inversedBy: 'events')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Artiste $artiste = null;
+
 
     public function __construct()
     {
