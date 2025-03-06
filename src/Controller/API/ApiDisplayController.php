@@ -20,14 +20,10 @@ final class ApiDisplayController extends AbstractController
             return $this->json(['error' => 'Request timeout or server error'], Response::HTTP_GATEWAY_TIMEOUT);
         }
 
+        $jsonData = $response->toArray();
 
-
-        // $jsonData = $response->toArray();
-
-       // return $this->render('api_display/index.html.twig', [
-       //     'artists' => $jsonData,
-        // ]);
-
-        return $this->render('api_display/index.html.twig');
+        return $this->render('api_display/index.html.twig', [
+            'artists' => $jsonData,
+        ]);
     }
 }

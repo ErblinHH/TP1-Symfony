@@ -1,7 +1,38 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello ApiDisplayController!{% endblock %}
+{% block title %}Liste des artistes{% endblock %}
 
 {% block body %}
+    <h1>Liste des artistes</h1>
 
+    {% if artists is not empty %}
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom</th>
+                <th>Description</th>
+                <th>Image</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for artist in artists %}
+                <tr>
+                    <td>{{ artist.id }}</td>
+                    <td>{{ artist.name }}</td>
+                    <td>{{ artist.description }}</td>
+                    <td>
+                        {% if artist.imagePath %}
+                            <img src="{{ asset(artist.imagePath) }}" alt="{{ artist.name }}" width="100" />
+                        {% else %}
+                            <span>No image available</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No artists found.</p>
+    {% endif %}
 {% endblock %}
