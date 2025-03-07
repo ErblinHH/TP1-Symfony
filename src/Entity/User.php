@@ -38,8 +38,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'creator', targetEntity: Event::class, orphanRemoval: true)]
     private Collection $createdEvents;
 
-    #[ORM\ManyToMany(targetEntity: Event::class, mappedBy: 'attendees')]
-    private Collection $attendedEvents;
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'attendedEvents')]
+    private Collection $attendees;
+
 
     public function __construct()
     {

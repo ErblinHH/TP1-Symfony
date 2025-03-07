@@ -1,18 +1,127 @@
-
-{% block title %}Register{% endblock %}
-
 {% block body %}
-    <h1>Register</h1>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
-    {{ form_errors(registrationForm) }}
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
 
-    {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.email) }}
-        {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
-        }) }}
-        {{ form_row(registrationForm.agreeTerms) }}
+        /* 🎵 Style du titre principal */
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 15px cyan, 0 0 30px #ff0099;
+            margin-bottom: 20px;
+            animation: pulseGlow 2s infinite alternate;
+        }
 
-        <button type="submit" class="btn">Register</button>
-    {{ form_end(registrationForm) }}
+        @keyframes pulseGlow {
+            from { text-shadow: 0 0 15px cyan, 0 0 30px #ff0099; }
+            to { text-shadow: 0 0 25px cyan, 0 0 40px #ff0099; }
+        }
+
+        .register-container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2em;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .register-container h1 {
+            margin-bottom: 1em;
+            color: #0ff;
+            text-shadow: 0 0 10px cyan;
+        }
+
+        .register-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
+            text-align: center;
+            font-size: 1em;
+        }
+
+        .register-container input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .register-container button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #ff0099, #493240);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .register-container button:hover {
+            background: linear-gradient(90deg, #ff0099, #6a0572);
+            transform: scale(1.05);
+        }
+
+        .error {
+            color: #ff4c4c;
+            margin-bottom: 1em;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+
+    <!-- 🎶 Titre principal au-dessus du formulaire -->
+    <h1 class="main-title">Inscris toi mon cousin🎵</h1>
+
+    <div class="register-container">
+        <h1>🎧 Inscription 🎧</h1>
+
+        {% if registrationForm.vars.errors|length > 0 %}
+            <p class="error">{{ form_errors(registrationForm) }}</p>
+        {% endif %}
+
+        {{ form_start(registrationForm) }}
+        {{ form_row(registrationForm.email, {'attr': {'placeholder': '📧 Adresse email'}}) }}
+        {{ form_row(registrationForm.plainPassword, {'attr': {'placeholder': '🔑 Mot de passe'}}) }}
+
+        <!-- Champ "Rester connecté" -->
+        <div class="checkbox-label">
+            {{ form_widget(registrationForm.rememberMe) }}
+            <label for="{{ registrationForm.rememberMe.vars.id }}">Rester connecté</label>
+        </div>
+
+        <button type="submit">S'inscrire</button>
+        {{ form_end(registrationForm) }}
+    </div>
 {% endblock %}

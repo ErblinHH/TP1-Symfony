@@ -26,7 +26,7 @@ class Event
     #[ORM\JoinColumn(nullable: false)]
     private ?User $creator = null;
 
-    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'attendedEvents')]
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'attendedEvents')]
     private Collection $attendees;
 
     #[ORM\ManyToOne(targetEntity: Artiste::class, inversedBy: 'events')]
