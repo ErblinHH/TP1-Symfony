@@ -62,6 +62,6 @@
 
     {% if app.user %}
         <p>Vous êtes connecté en tant que <strong>{{ app.user.email }}</strong>.</p>
-        <a href="{{ path('app_login') }}" class="btn">Déconnexion</a>
+        <a href="{{ path('app_logout') }}" class="btn">Déconnexion</a>
     {% endif %}
 {% endblock %}

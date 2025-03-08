@@ -14,7 +14,7 @@ final class LoginController extends AbstractController
     {
         // Empêche les utilisateurs déjà connectés d'accéder à /login
         if ($this->getUser()) {
-            //return $this->redirectToRoute('app_home'); // Page d'acceuil
+            return $this->redirectToRoute('app_home'); // Page d'acceuil
         }
 
         $error = $authenticationUtils->getLastAuthenticationError();

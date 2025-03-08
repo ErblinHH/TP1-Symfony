@@ -12,5 +12,12 @@ class HomePageController extends AbstractController
     public function index(): Response
     {
         return $this->render('home/homepage.html.twig');
+
+    }
+
+    public function disconnect(): Response
+    {
+
+        return $this->render('login/login.html.twig');
     }
 }
