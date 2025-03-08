@@ -24,14 +24,12 @@ class Artiste
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $imagePath = null;
 
-    #[ORM\Column(length: 255, nullable: false)]
-    private ?int $idArtist = null;
-
     /**
      * @var Collection<int, Event>
      */
-    #[ORM\OneToMany(targetEntity: Event::class, mappedBy: 'artiste')]
-    private Collection $event;
+    #[ORM\OneToMany(targetEntity: Event::class, mappedBy: 'artiste', cascade: ['remove'])]
+    private Collection $events;
+
 
     public function __construct()
     {
@@ -75,18 +73,6 @@ class Artiste
     public function setImagePath(?string $imagePath): static
     {
         $this->imagePath = $imagePath;
-
-        return $this;
-    }
-
-    public function getIdArtist(): ?string
-    {
-        return $this->idArtist;
-    }
-
-    public function setIdArtist(string $idArtist): static
-    {
-        $this->idArtist = $idArtist;
 
         return $this;
     }

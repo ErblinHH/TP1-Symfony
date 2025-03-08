@@ -1,0 +1,124 @@
+{% block body %}
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* 🎵 Style du titre */
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 15px cyan, 0 0 30px #ff0099;
+            margin-bottom: 20px;
+            animation: pulseGlow 2s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { text-shadow: 0 0 15px cyan, 0 0 30px #ff0099; }
+            to { text-shadow: 0 0 25px cyan, 0 0 40px #ff0099; }
+        }
+
+        .login-container {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2em;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .login-container h2 {
+            margin-bottom: 1em;
+            color: #0ff;
+            text-shadow: 0 0 10px cyan;
+        }
+
+        .login-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
+            text-align: center;
+            font-size: 1em;
+        }
+
+        .login-container input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .login-container .button-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .login-container button {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(90deg, #ff0099, #493240);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .login-container button:hover {
+            background: linear-gradient(90deg, #ff0099, #6a0572);
+            transform: scale(1.05);
+        }
+
+        .error {
+            color: #ff4c4c;
+            margin-bottom: 1em;
+        }
+    </style>
+    <h1 class="main-title">Bienvenue sur MusicFlow l'ékip 🎵</h1>
+
+    <div class="login-container">
+        <h2>🎧 Connecte-toi 🎧</h2>
+
+        <form method="post">
+
+            <input type="text" name="_username" placeholder="🎧 Nom d'utilisateur" required>
+            <input type="password" name="_password" placeholder="🔒 Mot de passe" required>
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+            {% if error %}
+                <p class="error">{{ error.messageKey|trans(error.messageData, 'security') }}</p>
+            {% endif %}
+
+            <div class="button-container">
+                <button type="submit">Connexion</button>
+                <button type="button" onclick="window.location.href='/register'">Inscription</button>
+            </div>
+        </form>
+
+    </div>
+{% endblock %}
