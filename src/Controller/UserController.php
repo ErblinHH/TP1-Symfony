@@ -26,7 +26,7 @@ final class UserController extends AbstractController
         return $entityManager->getRepository(User::class)->createQueryBuilder('a')
             ->select('a.email')
             ->getQuery()
-            ->getSingleColumnResult();
+            ->getResult();
     }
 
     #[Route('/user/{id}', name: 'app_user_by_id')]
