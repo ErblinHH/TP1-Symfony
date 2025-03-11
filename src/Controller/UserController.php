@@ -24,7 +24,7 @@ final class UserController extends AbstractController
     {
         // Récupérer uniquement les emails depuis la base de données
         return $entityManager->getRepository(User::class)->createQueryBuilder('a')
-            ->select('a.email')
+            ->select('a.email', 'a.roles')
             ->getQuery()
             ->getResult();
     }

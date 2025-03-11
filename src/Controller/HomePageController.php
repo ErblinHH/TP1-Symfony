@@ -17,7 +17,6 @@ class HomePageController extends AbstractController
 
     public function disconnect(): Response
     {
-
         return $this->render('login/login.html.twig');
     }
 }
