@@ -57,6 +57,11 @@ Application Symfony de gestion d'évènements musicaux, comportant une partie **
    symfony serve
    ```
 
+6. **Rajouter un compte admin**
+
+   ```bash
+   php bin/console app:create-admin
+   ```
 ---
 
 ## Remise du Projet
