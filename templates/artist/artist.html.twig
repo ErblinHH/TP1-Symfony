@@ -116,7 +116,7 @@
     {% endif %}
 
 
-    <h1>{{user.roles}}</h1>
+    <h1>{{app.user.roles[0]}}</h1>
 
     <a href="{{ path('app_home') }}" class="btn">Retour à l'accueil</a>
 {% endblock %}

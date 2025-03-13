@@ -28,6 +28,11 @@ class RegistrationController extends AbstractController
                 )
             );
 
+            if($user->getId()==1)
+            {
+                $user->setRoles(['ROLE_ADMIN']);
+            }
+
             // Sauvegarde utilisation
             $entityManager->persist($user);
             $entityManager->flush();
