@@ -1,8 +1,11 @@
 <?php
 namespace App\Controller;
+
+use App\Form\CreateArtistType;
 use App\Entity\Artiste;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -42,6 +45,30 @@ final class ArtistController extends AbstractController
         }
 
         return $this->json($artiste);
+    }
+
+    #[Route('/createArtist', name: 'app_artist_create')]
+    public function createArtist(EntityManagerInterface $entityManager, Request $request): Response
+    {
+        //creer l'artiste
+        $artist = new Artiste();
+        $form = $this->createForm(CreateArtistType::class, $artist);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+    
+            // Sauvegarde dans la bdd
+            $entityManager->persist($artist);
+            $entityManager->flush();
+
+           
+
+            // Rediriger vers la page d'accueil
+            return $this->redirectToRoute('app_home');
+        }
+
+        return $this->render('artist/createArtist.html.twig',
+            ['createArtist' => $form->createView()]);
     }
 }
 

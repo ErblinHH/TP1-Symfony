@@ -65,7 +65,8 @@
 
         <div>
             {%if app.user.roles[0] == 'ROLE_ADMIN'%}
-            <a href="{{ path('app_user') }}" class="btn">Liste des utilisateurs</a>
+                <a href="{{ path('app_user') }}" class="btn">Liste des utilisateurs</a>
+                <a href="{{ path('app_artist_create') }}" class="btn">Create an artist</a>
             {%endif%}
             <a href="{{ path('app_event') }}" class="btn">Liste des evenements</a>
             <a href="{{ path('app_artist') }}" class="btn">Liste des artistes</a>
