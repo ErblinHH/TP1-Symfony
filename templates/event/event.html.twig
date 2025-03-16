@@ -21,43 +21,6 @@
             margin-bottom: 20px;
         }
 
-        table {
-            width: 80%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        th {
-            background: rgba(255, 255, 255, 0.2);
-            text-transform: uppercase;
-        }
-
-        tr:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        a {
-            color: cyan;
-            text-decoration: none;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        a:hover {
-            color: #ff0099;
-        }
-
         .btn {
             display: inline-block;
             margin-top: 20px;
@@ -82,36 +45,10 @@
 
     <h1>🎭 Liste des Événements 🎭</h1>
 
-    {% if events is not empty %}
-        <table>
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nom</th>
-                <th>Date</th>
-                <th>Artiste</th>
-                <th>Créateur</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for event in events %}
-                <tr>
-                    <td>{{ event.id }}</td>
-                    <td>{{ event.name }}</td>
-                    <td>{{ event.date|date('d/m/Y') }}</td>
-                    <td>{{ event.artist_name ?: '❌' }}</td>
-                    <td>{{ event.creator_email ?: '❌' }}</td>
-                    <td>
-                        <a href="{{ path('app_event_by_id', { id: event.id }) }}">👀 Voir</a>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Aucun événement trouvé.</p>
-    {% endif %}
+    <!-- Div pour React avec données des événements en JSON -->
+    <div id="event-filter" data-events='{{ events|json_encode|raw }}'></div>
+
+    <script src="{{ asset('build/app.js') }}" defer></script>
 
     <a href="{{ path('app_home') }}" class="btn">Retour à l'accueil</a>
 {% endblock %}
