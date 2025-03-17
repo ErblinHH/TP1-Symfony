@@ -61,8 +61,6 @@ final class ArtistController extends AbstractController
             $entityManager->persist($artist);
             $entityManager->flush();
 
-           
-
             // Rediriger vers la page d'accueil
             return $this->redirectToRoute('app_home');
         }
