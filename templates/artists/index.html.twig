@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ArtistsController!{% endblock %}
+
+{% block body %}
+  <h1>Twig artists</h1>
+  {# Utilisation de react_component pour rendre un composant React dans Twig#}
+  {{ react_component('Artists') }}
+{% endblock %}

@@ -26,9 +26,15 @@ return [
         'version' => '7.3.0',
     ],
     'react' => [
-        'version' => '19.0.0',
+        'version' => '18.3.1',
     ],
     'react-dom' => [
-        'version' => '19.0.0',
+        'version' => '18.3.1',
+    ],
+    'scheduler' => [
+        'version' => '0.23.2',
+    ],
+    '@symfony/ux-react' => [
+        'path' => './vendor/symfony/ux-react/assets/dist/loader.js',
     ],
 ];

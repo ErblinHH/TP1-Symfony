@@ -1,28 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import EventFilter from './component/EventFilter';
-const eventDataElement = document.getElementById("event-filter");
-
-console.log("Test : React s'exécute !");
-console.log("Element trouvé ?", eventDataElement);
+import Artists from './components/Artists';
 
 
-if (eventDataElement) {
-    // Récupérer le contenu brut en string
-    const rawData = eventDataElement.dataset.events;
+const rootElement = document.getElementById('root');
+const pathname = window.location.pathname;  // Récupère le chemin de l'URL
+const root = ReactDOM.createRoot(rootElement);
 
-    console.log("Données brutes (string) :", rawData);
-
-    // Vérifier que la chaîne est bien formatée avant de parser
-    if (rawData && rawData.trim().length > 0) {
-        try {
-            const events = JSON.parse(rawData); // Convertir en objet JS
-            console.log("Données parsées (objet JS) :", events);
-            ReactDOM.render(<EventFilter events={events} />, eventDataElement);
-        } catch (error) {
-            console.error("Erreur lors du parsing JSON :", error);
-        }
-    } else {
-        console.error("Erreur : Les données récupérées sont vides ou mal formatées.");
-    }
+if (pathname === '/artists') {
+    root.render(<Artists />);
 }
+
+
+
+  // Passe l'ID de l'artiste comme prop si nécessaire

@@ -1,4 +1,24 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Application Symfony avec React</title>
+
+    {# Charger les fichiers CSS générés par Webpack Encore #}
+    {{ encore_entry_link_tags('app') }}
+</head>
+<body>
 <nav>
-    <a href="{{ path('app_home') }}">Accueil</a>
-    <a href="{{ path('npm create vite@latestapp_logout') }}">Déconnexion</a>
+   {#  <a href="{{ path('app_home') }}">Accueil</a>
+    <a href="{{ path('app_logout') }}">Déconnexion</a>
+    #}
 </nav>
+
+{# Le conteneur pour le composant React (sera ciblé par react_component) #}
+<div id="root"></div>
+
+{# Charger les fichiers JavaScript générés par Webpack Encore #}
+{{ encore_entry_script_tags('app') }}
+</body>
+</html>
