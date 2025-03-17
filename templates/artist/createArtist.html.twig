@@ -1,10 +1,11 @@
-<div>{{ form_errors(createArtist) }}
-{{ form_start(createArtist) }}
-{{ form_row(createArtist.name) }}
-{{ form_row(createArtist.description) }}
-{{ form_row(createArtist.imagePath) }}
+<div>
+    {{ form_errors(createArtist) }}
+    {{ form_start(createArtist) }}
+    {{ form_row(createArtist.name) }}
+    {{ form_row(createArtist.description) }}
+    {{ form_row(createArtist.imagePath) }}
 
-{{ form_end(createArtist) }}
+    {{ form_end(createArtist) }}
 
 <button type="submit">Create artist</button>
 
