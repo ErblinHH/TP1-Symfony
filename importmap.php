@@ -25,4 +25,28 @@ return [
     '@hotwired/turbo' => [
         'version' => '7.3.0',
     ],
+    'react-router-dom' => [
+        'version' => '7.4.0',
+    ],
+    'react-router/dom' => [
+        'version' => '7.4.0',
+    ],
+    'react-router' => [
+        'version' => '7.4.0',
+    ],
+    'react' => [
+        'version' => '19.0.0',
+    ],
+    'turbo-stream' => [
+        'version' => '2.4.0',
+    ],
+    'cookie' => [
+        'version' => '1.0.2',
+    ],
+    'set-cookie-parser' => [
+        'version' => '2.7.1',
+    ],
+    'react-dom' => [
+        'version' => '19.0.0',
+    ],
 ];

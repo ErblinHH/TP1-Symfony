@@ -13,22 +13,35 @@ use Symfony\Bundle\SecurityBundle\Security;
 class RegistrationController extends AbstractController
 {
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHashed, EntityManagerInterface $entityManager, Security $security): Response
-    {
+    public function register(
+        Request $request,
+        UserPasswordHasherInterface $userPasswordHasher,
+        EntityManagerInterface $entityManager,
+        Security $security
+    ): Response {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Hash le mot de passe
+            // Vérifier le nombre d'utilisateurs existants
+            $userCount = $entityManager->getRepository(User::class)->count([]);
+
+            if ($userCount === 0) {
+                $user->setRoles(['ROLE_ADMIN']);
+            } else {
+                $user->setRoles(['ROLE_USER']);
+            }
+
+            // Hacher le mot de passe
             $user->setPassword(
-                $userPasswordHashed->hashPassword(
+                $userPasswordHasher->hashPassword(
                     $user,
                     $form->get('plainPassword')->getData()
                 )
             );
 
-            // Sauvegarde utilisation
+            // Enregistrer en base
             $entityManager->persist($user);
             $entityManager->flush();
 
@@ -43,7 +56,6 @@ class RegistrationController extends AbstractController
             'registrationForm' => $form->createView(),
         ]);
     }
-
 }
 
 

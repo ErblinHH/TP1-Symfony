@@ -77,16 +77,16 @@ final class ApiController extends AbstractController
 
         // Transformation des événements en tableau de données pour la réponse JSON
         foreach ($events as $event) {
-            $createdBy = $event->getIdUser(); // Récupération de l'utilisateur ayant créé l'événement
+            $createdBy = $event->getCreator(); // Récupération de l'utilisateur ayant créé l'événement
 
             $data[] = [
                 'id' => $event->getId(),
                 'name' => $event->getName(),
-                'date' => $event->getDate(),
+                'date' => $event->getDate()->format('Y-m-d'),
                 'artistId' => $event->getArtiste()->getId(),
                 'createdBy' => $createdBy ? [
                     'id' => $createdBy->getId(),
-                    'username' => $createdBy->getUsername()
+                    'email' => $createdBy->getEmail()
                 ] : null
             ];
         }
