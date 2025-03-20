@@ -5,3 +5,7 @@ controllers:
     type: attribute
 app_logout:
     path: /logout
+
+    api_login:
+        path: /api/login
+
