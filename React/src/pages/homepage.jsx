@@ -1,14 +1,28 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "./HomePage.css"; // Ton fichier CSS
+import "./HomePage.css";
 
 const HomePage = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate(); // ✅ Déclaration correcte
+    const navigate = useNavigate();
 
     useEffect(() => {
-        fetch("http://127.0.0.1:8000/api/me", { credentials: "include" })
+        const token = localStorage.getItem("authToken");
+
+        // Si aucun token n'est présent, rediriger vers la page de connexion
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
+        // Faire la requête vers l'endpoint /api/me en incluant le token dans l'en-tête
+        fetch("http://127.0.0.1:8000/api/me", {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+        })
             .then((res) => {
                 if (!res.ok) {
                     throw new Error("Utilisateur non authentifié");
@@ -16,7 +30,10 @@ const HomePage = () => {
                 return res.json();
             })
             .then((data) => setUser(data))
-            .catch(() => navigate("/login")) // 🚀 Redirige si non connecté
+            .catch((error) => {
+                console.error("Erreur lors de la récupération de l'utilisateur :", error);
+                navigate("/login");
+            })
             .finally(() => setLoading(false));
     }, [navigate]);
 
@@ -29,20 +46,38 @@ const HomePage = () => {
 
             {user ? (
                 <div className="user-info">
-                    <p>Vous êtes connecté en tant que <strong>{user.email}</strong>.</p>
+                    <p>
+                        Vous êtes connecté en tant que <strong>{user.email}</strong>.
+                    </p>
 
                     <div className="buttons">
-                        {user.roles.includes("ROLE_ADMIN") && (
-                            <Link to="/users" className="btn">Liste des utilisateurs</Link>
+                        {user.roles && user.roles.includes("ROLE_ADMIN") && (
+                            <Link to="/users" className="btn">
+                                Liste des utilisateurs
+                            </Link>
                         )}
-                        <Link to="/events" className="btn">Liste des événements</Link>
-                        <Link to="/artists" className="btn">Liste des artistes</Link>
+                        <Link to="/events" className="btn">
+                            Liste des événements
+                        </Link>
+                        <Link to="/artists" className="btn">
+                            Liste des artistes
+                        </Link>
                     </div>
 
-                    <a href="http://127.0.0.1:8000/logout" className="btn logout">Déconnexion</a>
+                    <button
+                        onClick={() => {
+                            localStorage.removeItem("authToken");
+                            navigate("/login");
+                        }}
+                        className="btn logout"
+                    >
+                        Déconnexion
+                    </button>
                 </div>
             ) : (
-                <Link to="/login" className="btn">Connexion</Link>
+                <Link to="/login" className="btn">
+                    Connexion
+                </Link>
             )}
         </div>
     );
