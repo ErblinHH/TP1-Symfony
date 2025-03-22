@@ -2,9 +2,11 @@
 
 namespace App\Controller\API;
 
+use App\Entity\User;
 use App\Repository\ArtisteRepository;
 use App\Repository\EventRepository;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -162,6 +164,48 @@ final class ApiController extends AbstractController
             'email' => $user->getEmail(),
             'roles' => $user->getRoles(),
         ]);
+    }
+
+    #[Route('/api/register', name: 'api_register', methods: ['POST'])]
+    public function register(
+        Request $request,
+        EntityManagerInterface $em,
+        UserRepository $userRepository,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+        $plainPassword = $data['password'] ?? null;
+
+        if (!$email || !$plainPassword) {
+            return new JsonResponse(['error' => 'Email and password are required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifier si un utilisateur avec cet email existe déjà
+        if ($userRepository->findOneBy(['email' => $email])) {
+            return new JsonResponse(['error' => 'An account with this email already exists'], Response::HTTP_CONFLICT);
+        }
+
+        $user = new User();
+        $user->setEmail($email);
+        $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
+        $user->setPassword($hashedPassword);
+
+        // ✅ Vérifier s'il s'agit du premier utilisateur inscrit
+        $totalUsers = $userRepository->count([]);
+        if ($totalUsers === 0) {
+            $user->setRoles(['ROLE_ADMIN']); // Premier utilisateur → Admin
+        } else {
+            $user->setRoles(['ROLE_USER']); // Les autres → Utilisateur normal
+        }
+
+        $em->persist($user);
+        $em->flush();
+
+        return new JsonResponse([
+            'message' => 'User registered successfully',
+            'roles' => $user->getRoles()
+        ], Response::HTTP_CREATED);
     }
 
 }
