@@ -2,35 +2,37 @@
 
 namespace App\Controller\API;
 
+use App\Entity\User;
 use App\Repository\ArtisteRepository;
 use App\Repository\EventRepository;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface; // Utilisation de l'interface adaptée
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Request;
 
+#[AsController]
 final class ApiController extends AbstractController
 {
-    // Route pour afficher la documentation de l'API (Swagger)
     #[Route('/api/doc', name: 'api_doc')]
     public function index(): Response
     {
-        // Rendu de la page HTML pour la documentation Swagger
         return $this->render('api/index.html.twig', [
-            'swagger_url' => '/swagger.json', // L'URL pour récupérer la documentation en format JSON
+            'swagger_url' => '/swagger.json',
         ]);
     }
 
-    // Route pour récupérer la liste de tous les artistes
     #[Route('/api/artists', name: 'app_api_artists', methods: ['GET'])]
     public function getArtists(ArtisteRepository $artisteRepository): JsonResponse
     {
-        // Récupération de tous les artistes de la base de données
         $artists = $artisteRepository->findAll();
         $data = [];
 
-        // Transformation des artistes en tableau de données pour la réponse JSON
         foreach ($artists as $artist) {
             $data[] = [
                 'id' => $artist->getId(),
@@ -40,23 +42,18 @@ final class ApiController extends AbstractController
             ];
         }
 
-        // Retour des données des artistes en format JSON
         return $this->json($data);
     }
 
-    // Route pour récupérer les informations d'un artiste spécifique par son ID
     #[Route('/api/artists/{id}', name: 'app_api_artist', methods: ['GET'])]
     public function getArtist(int $id, ArtisteRepository $artisteRepository): JsonResponse
     {
-        // Recherche de l'artiste avec l'ID spécifié
         $artist = $artisteRepository->find($id);
 
-        // Si l'artiste n'est pas trouvé, retour d'une erreur 404
         if (!$artist) {
             return $this->json(['error' => 'Artist not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Retour des détails de l'artiste en format JSON
         $data = [
             'id' => $artist->getId(),
             'name' => $artist->getName(),
@@ -67,18 +64,14 @@ final class ApiController extends AbstractController
         return $this->json($data);
     }
 
-    // Route pour récupérer la liste de tous les événements
     #[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
     public function getEvents(EventRepository $eventRepository): JsonResponse
     {
-        // Récupération de tous les événements de la base de données
         $events = $eventRepository->findAll();
         $data = [];
 
-        // Transformation des événements en tableau de données pour la réponse JSON
         foreach ($events as $event) {
-            $createdBy = $event->getCreator(); // Récupération de l'utilisateur ayant créé l'événement
-
+            $createdBy = $event->getCreator();
             $data[] = [
                 'id' => $event->getId(),
                 'name' => $event->getName(),
@@ -91,31 +84,24 @@ final class ApiController extends AbstractController
             ];
         }
 
-        // Retour des données des événements en format JSON
         return $this->json($data);
     }
 
-    // Route pour récupérer les détails d'un événement spécifique par son ID
     #[Route('/api/events/{id}', name: 'app_api_event_detail', methods: ['GET'])]
-    public function getEvent(int $id, EventRepository $eventRepository, UserRepository $userRepository): JsonResponse
+    public function getEvent(int $id, EventRepository $eventRepository): JsonResponse
     {
-        // Recherche de l'événement avec l'ID spécifié
         $event = $eventRepository->find($id);
 
-        // Si l'événement n'est pas trouvé, retour d'une erreur 404
         if (!$event) {
             return $this->json(['message' => 'Event not found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $createdBy = $event->getIdUser(); // Récupération de l'utilisateur ayant créé l'événement
-
-        // Récupération la liste des utilisateurs inscrit à l'événement
+        $createdBy = $event->getIdUser();
         $users = $event->getUsers()->map(fn ($user) => [
             'id' => $user->getId(),
             'username' => $user->getUsername()
         ])->toArray();
 
-        // Retour des détails de l'événement en format JSON
         $data = [
             'id' => $event->getId(),
             'name' => $event->getName(),
@@ -125,10 +111,101 @@ final class ApiController extends AbstractController
                 'id' => $createdBy->getId(),
                 'username' => $createdBy->getUsername()
             ] : null,
-            'users' => $users // Liste des utilisateurs inscrit à l'événement
+            'users' => $users
         ];
 
         return $this->json($data);
+    }
+
+    #[Route('/api/login', name: 'api_login', methods: ['POST'])]
+    public function login(
+        Request $request,
+        JWTTokenManagerInterface $jwtManager,
+        UserRepository $userRepository,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        // Récupération des données envoyées par la requête POST
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+
+        // Pour débogage (à enlever en production)
+        dump($email, $password);
+
+        // Recherche de l'utilisateur par email
+        $user = $userRepository->findOneByEmail($email);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User does not exist'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Vérification du mot de passe
+        if (!$passwordHasher->isPasswordValid($user, $password)) {
+            return new JsonResponse(['error' => 'Invalid credentials'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Génération du JWT token pour l'utilisateur
+        $token = $jwtManager->create($user);
+
+        return new JsonResponse(['token' => $token]);
+    }
+
+    #[Route('/api/me', name: 'api_me', methods: ['GET'])]
+    public function me(): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'Not authenticated'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        return new JsonResponse([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'roles' => $user->getRoles(),
+        ]);
+    }
+
+    #[Route('/api/register', name: 'api_register', methods: ['POST'])]
+    public function register(
+        Request $request,
+        EntityManagerInterface $em,
+        UserRepository $userRepository,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? null;
+        $plainPassword = $data['password'] ?? null;
+
+        if (!$email || !$plainPassword) {
+            return new JsonResponse(['error' => 'Email and password are required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifier si un utilisateur avec cet email existe déjà
+        if ($userRepository->findOneBy(['email' => $email])) {
+            return new JsonResponse(['error' => 'An account with this email already exists'], Response::HTTP_CONFLICT);
+        }
+
+        $user = new User();
+        $user->setEmail($email);
+        $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
+        $user->setPassword($hashedPassword);
+
+        // ✅ Vérifier s'il s'agit du premier utilisateur inscrit
+        $totalUsers = $userRepository->count([]);
+        if ($totalUsers === 0) {
+            $user->setRoles(['ROLE_ADMIN']); // Premier utilisateur → Admin
+        } else {
+            $user->setRoles(['ROLE_USER']); // Les autres → Utilisateur normal
+        }
+
+        $em->persist($user);
+        $em->flush();
+
+        return new JsonResponse([
+            'message' => 'User registered successfully',
+            'roles' => $user->getRoles()
+        ], Response::HTTP_CREATED);
     }
 
 }
