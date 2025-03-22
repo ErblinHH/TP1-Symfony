@@ -130,5 +130,21 @@ final class ApiController extends AbstractController
 
         return $this->json($data);
     }
+    #[Route('/api/users', name: 'api_users', methods: ['GET'])]
+    public function getUsers(UserRepository $userRepository): JsonResponse
+    {
+        $users = $userRepository->findAll();
+
+        $data = array_map(function ($user) {
+            return [
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'roles' => $user->getRoles(),
+            ];
+        }, $users);
+
+        return new JsonResponse($data, Response::HTTP_OK);
+    }
+
 
 }

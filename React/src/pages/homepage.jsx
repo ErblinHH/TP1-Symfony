@@ -26,7 +26,7 @@ const HomePage = () => {
                         <Link to="/artists" className="btn">Liste des artistes</Link>
                     </div>
 
-                    <Link to="/logout" className="btn logout">Déconnexion</Link>
+                    <Link to="/login" className="btn logout">Déconnexion</Link>
                 </div>
             ) : (
                 <Link to="/login" className="btn">Connexion</Link>
