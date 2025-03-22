@@ -223,5 +223,4 @@ final class ApiController extends AbstractController
 
         return new JsonResponse($data, Response::HTTP_OK);
     }
-
 }

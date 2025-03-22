@@ -51,6 +51,7 @@ const HomePage = () => {
                     </p>
 
                     <div className="buttons">
+                        {/* Afficher le lien vers la liste des utilisateurs si l'utilisateur est un admin */}
                         {user.roles && user.roles.includes("ROLE_ADMIN") && (
                             <Link to="/users" className="btn">
                                 Liste des utilisateurs
@@ -64,10 +65,11 @@ const HomePage = () => {
                         </Link>
                     </div>
 
+                    {/* Bouton de déconnexion */}
                     <button
                         onClick={() => {
-                            localStorage.removeItem("authToken");
-                            navigate("/login");
+                            localStorage.removeItem("authToken");  // Supprimer le token
+                            navigate("/login");  // Rediriger vers la page de connexion
                         }}
                         className="btn logout"
                     >
