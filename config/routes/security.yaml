@@ -1,11 +1,15 @@
-_security_logout:
-    resource: security.route_loader.logout
-    type: service
+security_logout:
+    path: /api/logout
+    controller: App\Controller\SecurityController::logout
 
 security:
     firewalls:
         main:
+            pattern: ^/api
+            stateless: true
             json_login:
-                check_path: api_login
+                check_path: /api/login
                 username_path: email
                 password_path: password
+            logout:
+                path: /api/logout

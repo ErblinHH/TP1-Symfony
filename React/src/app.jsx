@@ -4,6 +4,7 @@ import Events from "./pages/events.jsx";
 import Users from "./pages/users.jsx";
 import Artists from "./pages/artists.jsx";
 import HomePage from "./pages/homepage.jsx";
+import Login from "./pages/login.jsx";
 
 const NotFound = () => <h1 style={{ textAlign: "center", marginTop: "20px", color: "red" }}>🚨 Erreur 404 - Page introuvable 🚨</h1>;
 

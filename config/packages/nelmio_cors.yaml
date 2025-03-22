@@ -1,13 +1,14 @@
 nelmio_cors:
     defaults:
-        allow_origin: ['*']  # Adresse du front Vite
         allow_credentials: true
-        allow_headers: ['Content-Type', 'Authorization']
-        allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+        allow_origin: ['*']  # Ou spécifie ici le domaine autorisé, ex: 'http://localhost:5173'
+        allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With']
+        allow_methods: ['POST', 'GET', 'OPTIONS', 'PUT', 'DELETE']
+        expose_headers: ['Link']
         max_age: 3600
     paths:
-        '^/api/':  # Appliquer CORS sur les routes commençant par /api/
-            allow_origin: ['*']
+        '^/api/':
+            allow_origin: ['http://localhost:5173']  # Autoriser les requêtes venant de ce domaine
             allow_headers: ['Content-Type', 'Authorization']
             allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
             max_age: 3600
