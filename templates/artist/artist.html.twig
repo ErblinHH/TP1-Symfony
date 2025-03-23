@@ -89,6 +89,7 @@
                 <th>Description</th>
                 <th>Image</th>
                 <th>Action</th>
+                <th>Modifier</th>
             </tr>
             </thead>
             <tbody>
@@ -106,6 +107,9 @@
                     </td>
                     <td>
                         <a href="{{ path('app_artist_by_id', { id: artist.id }) }}">👀 Voir</a>
+                    </td>
+                    <td>
+                        <a href="{{ path('app_artist_edit',{ id: artist.id }) }}"> MODIFIER</a>
                     </td>
                 </tr>
             {% endfor %}

@@ -73,5 +73,10 @@
 <br><br>
         </div>
         <a href="{{ path('app_logout') }}" class="btn">Déconnexion</a>
+
+        {% for event in app.user.attendedEvents %}
+            <p>{{ event.name }}</p>
+        {% endfor %}
+
     {% endif %}
 {% endblock %}
