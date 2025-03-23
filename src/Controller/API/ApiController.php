@@ -64,6 +64,7 @@ final class ApiController extends AbstractController
         return $this->json($data);
     }
 
+
     #[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
     public function getEvents(EventRepository $eventRepository): JsonResponse
     {
@@ -223,4 +224,51 @@ final class ApiController extends AbstractController
 
         return new JsonResponse($data, Response::HTTP_OK);
     }
+
+    #[Route('/api/artists/{id}', name: 'app_api_artist_update', methods: ['PUT'])]
+    public function updateArtist(
+        int $id,
+        Request $request,
+        ArtisteRepository $artisteRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        // Récupérer l'utilisateur connecté
+        $user = $this->getUser();
+        if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Récupérer l'artiste par son ID
+        $artist = $artisteRepository->find($id);
+        if (!$artist) {
+            return new JsonResponse(['error' => 'Artist not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Décoder les données envoyées dans la requête
+        $data = json_decode($request->getContent(), true);
+
+        // Mettre à jour les propriétés de l'artiste avec les données envoyées
+        if (isset($data['name'])) {
+            $artist->setName($data['name']);
+        }
+        if (isset($data['description'])) {
+            $artist->setDescription($data['description']);
+        }
+        if (isset($data['imagePath'])) {
+            $artist->setImagePath($data['imagePath']);
+        }
+
+        // Enregistrer les modifications
+        $em->persist($artist);
+        $em->flush();
+
+        // Retourner les données de l'artiste modifié
+        return $this->json([
+            'id' => $artist->getId(),
+            'name' => $artist->getName(),
+            'description' => $artist->getDescription(),
+            'imagePath' => $artist->getImagePath(),
+        ]);
+    }
+
 }
