@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import "./Artists.css";
+import "./CSS/Artists.css";
 
 const EditArtist = () => {
     const [name, setName] = useState("");
@@ -9,7 +9,7 @@ const EditArtist = () => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-    const { id } = useParams(); // Récupère l'id de l'artiste à partir de l'URL
+    const { id } = useParams();
 
     // Charger les données de l'artiste
     useEffect(() => {
@@ -28,7 +28,12 @@ const EditArtist = () => {
                 "Authorization": `Bearer ${token}`,
             },
         })
-            .then((res) => res.json())
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error("Artiste introuvable");
+                }
+                return res.json();
+            })
             .then((data) => {
                 setName(data.name);
                 setDescription(data.description);
@@ -53,7 +58,7 @@ const EditArtist = () => {
         }
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/artists/${id}/edit`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/artists/${id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

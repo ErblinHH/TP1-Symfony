@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Artists.css"; // Mettez à jour avec le bon fichier CSS
+import "./CSS/Artists.css"; // Mettez à jour avec le bon fichier CSS
 
 function Events() {
     const [events, setEvents] = useState([]);

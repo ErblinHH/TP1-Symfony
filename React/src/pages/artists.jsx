@@ -1,66 +1,55 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import './Artists.css';
+import './CSS/Artists.css';
 import { Link } from 'react-router-dom';
 
-
-    function Artists() {
+function Artists() {
     const [artists, setArtists] = useState([]);
-    const [user, setUser] = useState(null); // Pour stocker les informations de l'utilisateur
+    const [user, setUser] = useState(null);
+    const [search, setSearch] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
         const token = localStorage.getItem("authToken");
 
-        // Si aucun token n'est présent, rediriger vers la page de connexion
         if (!token) {
             navigate("/login");
             return;
         }
 
-        // Faire la requête vers l'endpoint /api/me pour récupérer les infos de l'utilisateur
         fetch('http://127.0.0.1:8000/api/me', {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
         })
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error("Erreur lors de la récupération des informations de l'utilisateur");
-                }
-                return res.json();
-            })
-            .then((data) => {
-                setUser(data);
-            })
-            .catch((error) => {
-                console.error("Erreur lors de la récupération des informations de l'utilisateur :", error);
-                navigate("/login");
-            });
+            .then(res => res.ok ? res.json() : null)
+            .then(data => setUser(data))
+            .catch(() => navigate("/login"));
+    }, [navigate]);
 
-        // Faire la requête vers l'endpoint /api/artists pour récupérer la liste des artistes
-        fetch('http://127.0.0.1:8000/api/artists', {
+    useEffect(() => {
+        fetchArtists();
+    }, [search]);
+
+    const fetchArtists = () => {
+        const token = localStorage.getItem("authToken");
+        const url = search
+            ? `http://127.0.0.1:8000/api/artists?name=${encodeURIComponent(search)}`
+            : "http://127.0.0.1:8000/api/artists";
+
+        fetch(url, {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             },
         })
-            .then((res) => {
-                if (!res.ok) {
-                    throw new Error("Erreur lors de la récupération des artistes");
-                }
-                return res.json();
-            })
-            .then((data) => setArtists(data))
-            .catch((error) => {
-                console.error("Erreur lors de la récupération des artistes :", error);
-                navigate("/login");
-            });
+            .then(res => res.ok ? res.json() : [])
+            .then(data => setArtists(data))
+            .catch(error => console.error("Erreur lors de la récupération des artistes :", error));
+    };
 
-    }, [navigate]);
-
-    if (!user) return <p>Chargement des données utilisateur...</p>; // Si les données utilisateur ne sont pas encore chargées
+    if (!user) return <p>Chargement des données utilisateur...</p>;
 
     const isAdmin = user.roles && user.roles.includes("ROLE_ADMIN");
 
@@ -68,13 +57,19 @@ import { Link } from 'react-router-dom';
         <div className="container">
             <h1>🎨 Liste des Artistes 🎨</h1>
 
-            {/* Vérifier si l'utilisateur est admin */}
+            {/* 🔍 Champ de recherche */}
+            <input
+                type="text"
+                placeholder="Rechercher un artiste..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="search-input"
+            />
+
+            {/* Affichage du bouton "Créer un artiste" uniquement si l'utilisateur est admin */}
             {isAdmin && (
                 <div className="actions">
-                    <button
-                        onClick={() => navigate("/artists/create")}
-                        className="btn btn-create"
-                    >
+                    <button onClick={() => navigate("/artists/createArtist")} className="btn btn-create">
                         Rajouter un artiste
                     </button>
                 </div>
@@ -92,7 +87,7 @@ import { Link } from 'react-router-dom';
                     </tr>
                     </thead>
                     <tbody>
-                    {artists.map((artist) => (
+                    {artists.map(artist => (
                         <tr key={artist.id}>
                             <td>{artist.id}</td>
                             <td>{artist.name}</td>
@@ -105,10 +100,9 @@ import { Link } from 'react-router-dom';
                                 )}
                             </td>
                             <td>
-
-                                {/* Afficher le bouton "Modifier" uniquement si l'utilisateur est admin */}
+                                {/* Affichage du bouton "Modifier" uniquement si l'utilisateur est admin */}
                                 {isAdmin && (
-                                    <Link to={`/artist/${artist.id}/edit`} className="btn btn-small">Edit</Link>
+                                    <Link to={`/artists/edit/${artist.id}`} className="btn btn-small">Modifier</Link>
                                 )}
                             </td>
                         </tr>

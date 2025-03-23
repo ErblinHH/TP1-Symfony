@@ -38,9 +38,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'creator', targetEntity: Event::class, orphanRemoval: true)]
     private Collection $createdEvents;
 
-    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'attendedEvents')]
-    private Collection $attendees;
-
+    // Déclarez attendedEvents en indiquant que cette propriété est l'inverse du ManyToMany de l'entité Event.
+    #[ORM\ManyToMany(targetEntity: Event::class, mappedBy: 'attendees')]
+    private Collection $attendedEvents;
 
     public function __construct()
     {
@@ -149,10 +149,4 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
         return $this;
     }
-
-    public function isAdmin(): bool
-    {
-        return in_array('ROLE_ADMIN', $this->roles);
-    }
-
 }

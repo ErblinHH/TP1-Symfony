@@ -2,6 +2,7 @@
 
 namespace App\Controller\API;
 
+use App\Entity\Artiste;
 use App\Entity\User;
 use App\Repository\ArtisteRepository;
 use App\Repository\EventRepository;
@@ -27,24 +28,6 @@ final class ApiController extends AbstractController
         ]);
     }
 
-    #[Route('/api/artists', name: 'app_api_artists', methods: ['GET'])]
-    public function getArtists(ArtisteRepository $artisteRepository): JsonResponse
-    {
-        $artists = $artisteRepository->findAll();
-        $data = [];
-
-        foreach ($artists as $artist) {
-            $data[] = [
-                'id' => $artist->getId(),
-                'name' => $artist->getName(),
-                'description' => $artist->getDescription(),
-                'imagePath' => $artist->getImagePath()
-            ];
-        }
-
-        return $this->json($data);
-    }
-
     #[Route('/api/artists/{id}', name: 'app_api_artist', methods: ['GET'])]
     public function getArtist(int $id, ArtisteRepository $artisteRepository): JsonResponse
     {
@@ -63,31 +46,6 @@ final class ApiController extends AbstractController
 
         return $this->json($data);
     }
-
-
-    /*#[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
-    public function getEvents(EventRepository $eventRepository): JsonResponse
-    {
-        $events = $eventRepository->findAll();
-        $data = [];
-
-        foreach ($events as $event) {
-            $createdBy = $event->getCreator();
-            $data[] = [
-                'id' => $event->getId(),
-                'name' => $event->getName(),
-                'date' => $event->getDate()->format('Y-m-d'),
-                'artistId' => $event->getArtiste()->getId(),
-                'createdBy' => $createdBy ? [
-                    'id' => $createdBy->getId(),
-                    'email' => $createdBy->getEmail()
-                ] : null
-            ];
-        }
-
-        return $this->json($data);
-    }*/
-
     #[Route('/api/events/{id}', name: 'app_api_event_detail', methods: ['GET'])]
     public function getEvent(int $id, EventRepository $eventRepository): JsonResponse
     {
@@ -97,26 +55,28 @@ final class ApiController extends AbstractController
             return $this->json(['message' => 'Event not found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $createdBy = $event->getIdUser();
-        $users = $event->getUsers()->map(fn ($user) => [
+        $createdBy = $event->getCreator();
+        $users = $event->getAttendees()->map(fn ($user) => [
             'id' => $user->getId(),
-            'username' => $user->getUsername()
+            'email' => $user->getEmail()
         ])->toArray();
 
         $data = [
             'id' => $event->getId(),
             'name' => $event->getName(),
-            'date' => $event->getDate()?->format('Y-m-d\TH:i:s.u\Z'),
+            'date' => $event->getDate()?->format('Y-m-d'),
             'artistId' => $event->getArtiste()?->getId(),
             'createdBy' => $createdBy ? [
                 'id' => $createdBy->getId(),
-                'username' => $createdBy->getUsername()
+                'email' => $createdBy->getEmail()
             ] : null,
             'users' => $users
         ];
 
         return $this->json($data);
     }
+
+
 
     #[Route('/api/login', name: 'api_login', methods: ['POST'])]
     public function login(
@@ -224,53 +184,6 @@ final class ApiController extends AbstractController
 
         return new JsonResponse($data, Response::HTTP_OK);
     }
-
-    #[Route('/api/artists/{id}', name: 'app_api_artist_update', methods: ['PUT'])]
-    public function updateArtist(
-        int $id,
-        Request $request,
-        ArtisteRepository $artisteRepository,
-        EntityManagerInterface $em
-    ): JsonResponse {
-        // Récupérer l'utilisateur connecté
-        $user = $this->getUser();
-        if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
-            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
-        }
-
-        // Récupérer l'artiste par son ID
-        $artist = $artisteRepository->find($id);
-        if (!$artist) {
-            return new JsonResponse(['error' => 'Artist not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        // Décoder les données envoyées dans la requête
-        $data = json_decode($request->getContent(), true);
-
-        // Mettre à jour les propriétés de l'artiste avec les données envoyées
-        if (isset($data['name'])) {
-            $artist->setName($data['name']);
-        }
-        if (isset($data['description'])) {
-            $artist->setDescription($data['description']);
-        }
-        if (isset($data['imagePath'])) {
-            $artist->setImagePath($data['imagePath']);
-        }
-
-        // Enregistrer les modifications
-        $em->persist($artist);
-        $em->flush();
-
-        // Retourner les données de l'artiste modifié
-        return $this->json([
-            'id' => $artist->getId(),
-            'name' => $artist->getName(),
-            'description' => $artist->getDescription(),
-            'imagePath' => $artist->getImagePath(),
-        ]);
-    }
-/// TEST ///
     #[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
     public function getEvents(Request $request, EventRepository $eventRepository): JsonResponse
     {
@@ -299,6 +212,198 @@ final class ApiController extends AbstractController
 
         return $this->json($data);
     }
+
+    #[Route('/api/artists', name: 'app_api_artists', methods: ['GET'])]
+    public function getArtists(Request $request, ArtisteRepository $artisteRepository): JsonResponse
+    {
+        $name = $request->query->get('name'); // Récupère le paramètre GET "name"
+
+        if ($name) {
+            // Rechercher des artistes qui contiennent le nom (insensible à la casse)
+            $artists = $artisteRepository->createQueryBuilder('a')
+                ->where('LOWER(a.name) LIKE LOWER(:name)')
+                ->setParameter('name', '%' . $name . '%')
+                ->getQuery()
+                ->getResult();
+        } else {
+            $artists = $artisteRepository->findAll();
+        }
+
+        $data = array_map(fn($artist) => [
+            'id' => $artist->getId(),
+            'name' => $artist->getName(),
+            'description' => $artist->getDescription(),
+            'imagePath' => $artist->getImagePath()
+        ], $artists);
+
+        return $this->json($data);
+    }
+
+    #[Route('/api/artists/create', name: 'app_api_create_artist', methods: ['POST'])]
+    public function createArtist(Request $request, EntityManagerInterface $em, ArtisteRepository $artisteRepository): JsonResponse
+    {
+        $user = $this->getUser();
+
+        // 🚨 Vérification : Seuls les admins peuvent créer un artiste
+        if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $name = $data['name'] ?? null;
+        $description = $data['description'] ?? null;
+        $imagePath = $data['imagePath'] ?? null;
+
+        if (!$name || !$description) {
+            return new JsonResponse(['error' => 'Name and description are required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $artist = new Artiste();
+        $artist->setName($name);
+        $artist->setDescription($description);
+        $artist->setImagePath($imagePath);
+
+        $em->persist($artist);
+        $em->flush();
+
+        return $this->json([
+            'id' => $artist->getId(),
+            'name' => $artist->getName(),
+            'description' => $artist->getDescription(),
+            'imagePath' => $artist->getImagePath(),
+        ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/api/artists/{id}', name: 'app_api_artist_update', methods: ['PUT'])]
+    public function updateArtist(
+        int $id,
+        Request $request,
+        ArtisteRepository $artisteRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $user = $this->getUser();
+
+        // 🚨 Vérification : Seuls les admins peuvent modifier un artiste
+        if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        $artist = $artisteRepository->find($id);
+        if (!$artist) {
+            return new JsonResponse(['error' => 'Artist not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['name'])) {
+            $artist->setName($data['name']);
+        }
+        if (isset($data['description'])) {
+            $artist->setDescription($data['description']);
+        }
+        if (isset($data['imagePath'])) {
+            $artist->setImagePath($data['imagePath']);
+        }
+
+        $em->persist($artist);
+        $em->flush();
+
+        return $this->json([
+            'id' => $artist->getId(),
+            'name' => $artist->getName(),
+            'description' => $artist->getDescription(),
+            'imagePath' => $artist->getImagePath(),
+        ]);
+    }
+
+    #[Route('/api/events/{id}/signup', name: 'app_api_event_signup', methods: ['POST'])]
+    public function signupEvent(
+        int $id,
+        Request $request,
+        EventRepository $eventRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        // Récupérer l'utilisateur connecté
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Récupérer l'évènement
+        $event = $eventRepository->find($id);
+        if (!$event) {
+            return new JsonResponse(['error' => 'Event not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Vérifier si l'utilisateur est déjà inscrit
+        if ($event->getAttendees()->contains($user)) {
+            return new JsonResponse(['message' => 'User already registered'], Response::HTTP_OK);
+        }
+
+        // Inscrire l'utilisateur à l'évènement
+        $event->addAttendee($user);
+        $em->persist($event);
+        $em->flush();
+
+        // Récupérer la liste des utilisateurs inscrits
+        $attendees = $event->getAttendees()->map(function($u) {
+            return [
+                'id' => $u->getId(),
+                'username' => $u->getEmail()
+            ];
+        })->toArray();
+
+        return new JsonResponse([
+            'message' => 'User registered successfully',
+            'users' => $attendees
+        ], Response::HTTP_OK);
+    }
+
+
+    #[Route('/api/events/{id}/unsubscribe', name: 'app_api_event_unsubscribe', methods: ['POST'])]
+    public function unsubscribeEvent(
+        int $id,
+        Request $request,
+        EventRepository $eventRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        // Récupérer l'utilisateur connecté
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Récupérer l'évènement
+        $event = $eventRepository->find($id);
+        if (!$event) {
+            return new JsonResponse(['error' => 'Event not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Vérifier si l'utilisateur est inscrit
+        if (!$event->getAttendees()->contains($user)) {
+            return new JsonResponse(['message' => 'User is not registered for this event'], Response::HTTP_OK);
+        }
+
+        // Désinscrire l'utilisateur de l'évènement
+        $event->removeAttendee($user);
+        $em->persist($event);
+        $em->flush();
+
+        // Récupérer la liste mise à jour des utilisateurs inscrits
+        $attendees = $event->getAttendees()->map(function($u) {
+            return [
+                'id' => $u->getId(),
+                'username' => $u->getUsername() // ou getUserIdentifier() selon votre implémentation
+            ];
+        })->toArray();
+
+        return new JsonResponse([
+            'message' => 'User unsubscribed successfully',
+            'users' => $attendees
+        ], Response::HTTP_OK);
+    }
+
+
 
 
 
