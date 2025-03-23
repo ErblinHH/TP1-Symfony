@@ -12,7 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface; // Utilisation de l'interface adaptée
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -65,7 +65,7 @@ final class ApiController extends AbstractController
     }
 
 
-    #[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
+    /*#[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
     public function getEvents(EventRepository $eventRepository): JsonResponse
     {
         $events = $eventRepository->findAll();
@@ -86,7 +86,7 @@ final class ApiController extends AbstractController
         }
 
         return $this->json($data);
-    }
+    }*/
 
     #[Route('/api/events/{id}', name: 'app_api_event_detail', methods: ['GET'])]
     public function getEvent(int $id, EventRepository $eventRepository): JsonResponse
@@ -270,5 +270,36 @@ final class ApiController extends AbstractController
             'imagePath' => $artist->getImagePath(),
         ]);
     }
+/// TEST ///
+    #[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
+    public function getEvents(Request $request, EventRepository $eventRepository): JsonResponse
+    {
+        $date = $request->query->get('date'); // 📅 Récupérer la date depuis les paramètres GET
+
+        if ($date) {
+            $events = $eventRepository->findBy(['date' => new \DateTime($date)]);
+        } else {
+            $events = $eventRepository->findAll();
+        }
+        $data = [];
+
+        foreach ($events as $event) {
+            $createdBy = $event->getCreator();
+            $data[] = [
+                'id' => $event->getId(),
+                'name' => $event->getName(),
+                'date' => $event->getDate()->format('Y-m-d'),
+                'artistId' => $event->getArtiste()?->getId(),
+                'createdBy' => $createdBy ? [
+                    'id' => $createdBy->getId(),
+                    'email' => $createdBy->getEmail()
+                ] : null
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+
 
 }

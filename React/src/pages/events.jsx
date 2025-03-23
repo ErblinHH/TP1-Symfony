@@ -1,27 +1,35 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './Artists.css'; // Mettez à jour avec le bon fichier CSS
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./Artists.css"; // Mettez à jour avec le bon fichier CSS
 
 function Events() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filterDate, setFilterDate] = useState(""); // 📅 État pour stocker la date sélectionnée
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Récupérer le token JWT depuis le localStorage
+        fetchEvents();
+    }, [filterDate]); // 🔄 Rafraîchir la liste quand la date change
+
+    const fetchEvents = () => {
         const token = localStorage.getItem("authToken");
 
-        // Si aucun token n'est présent, rediriger vers la page de connexion
         if (!token) {
             navigate("/login");
             return;
         }
 
-        // Faire la requête vers l'endpoint /api/events en incluant le token dans les headers
-        fetch('http://127.0.0.1:8000/api/events', {
+        // Construire l'URL avec le filtre (si une date est sélectionnée)
+        let url = "http://127.0.0.1:8000/api/events";
+        if (filterDate) {
+            url += `?date=${filterDate}`;
+        }
+
+        fetch(url, {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
+                "Authorization": `Bearer ${token}`,
             },
         })
             .then((res) => {
@@ -33,17 +41,24 @@ function Events() {
             .then((data) => setEvents(data))
             .catch((error) => {
                 console.error("Erreur lors de la récupération des événements :", error);
-                // Optionnel : rediriger vers la page de login si le token est invalide ou expiré
                 navigate("/login");
             })
             .finally(() => setLoading(false));
-    }, [navigate]);
+    };
 
     if (loading) return <p>Chargement...</p>;
 
     return (
         <div className="container">
             <h1>🎨 Liste des événements 🎨</h1>
+
+            {/* 📅 Sélecteur de date */}
+            <label>Filtrer par date :</label>
+            <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+            />
 
             {events.length > 0 ? (
                 <table>
@@ -61,8 +76,8 @@ function Events() {
                     {events.map((event) => (
                         <tr key={event.id}>
                             <td>{event.id}</td>
-                            <td>{event.creator_id}</td>
-                            <td>{event.artiste_id}</td>
+                            <td>{event.createdBy?.email || "N/A"}</td>
+                            <td>{event.artistId}</td>
                             <td>{event.name}</td>
                             <td>{event.date}</td>
                             <td>
