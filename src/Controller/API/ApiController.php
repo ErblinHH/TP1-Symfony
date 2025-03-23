@@ -4,6 +4,8 @@ namespace App\Controller\API;
 
 use App\Entity\Artiste;
 use App\Entity\User;
+use App\Entity\Event;
+
 use App\Repository\ArtisteRepository;
 use App\Repository\EventRepository;
 use App\Repository\UserRepository;
@@ -46,7 +48,7 @@ final class ApiController extends AbstractController
 
         return $this->json($data);
     }
-    #[Route('/api/events/{id}', name: 'app_api_event_detail', methods: ['GET'])]
+    /*#[Route('/api/events/{id}', name: 'app_api_event_detail', methods: ['GET'])]
     public function getEvent(int $id, EventRepository $eventRepository): JsonResponse
     {
         $event = $eventRepository->find($id);
@@ -65,7 +67,7 @@ final class ApiController extends AbstractController
             'id' => $event->getId(),
             'name' => $event->getName(),
             'date' => $event->getDate()?->format('Y-m-d'),
-            'artistId' => $event->getArtiste()?->getId(),
+            'artistName' => $event->getArtiste()?->getName(),
             'createdBy' => $createdBy ? [
                 'id' => $createdBy->getId(),
                 'email' => $createdBy->getEmail()
@@ -74,7 +76,7 @@ final class ApiController extends AbstractController
         ];
 
         return $this->json($data);
-    }
+    }*/
 
 
 
@@ -185,24 +187,27 @@ final class ApiController extends AbstractController
         return new JsonResponse($data, Response::HTTP_OK);
     }
     #[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
+    #[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
     public function getEvents(Request $request, EventRepository $eventRepository): JsonResponse
     {
-        $date = $request->query->get('date'); // 📅 Récupérer la date depuis les paramètres GET
+        $date = $request->query->get('date');
 
         if ($date) {
             $events = $eventRepository->findBy(['date' => new \DateTime($date)]);
         } else {
             $events = $eventRepository->findAll();
         }
+
         $data = [];
 
         foreach ($events as $event) {
             $createdBy = $event->getCreator();
+            $artist = $event->getArtiste();  // Récupère l'artiste associé
             $data[] = [
                 'id' => $event->getId(),
                 'name' => $event->getName(),
                 'date' => $event->getDate()->format('Y-m-d'),
-                'artistId' => $event->getArtiste()?->getId(),
+                'artistName' => $artist ? $artist->getName() : 'N/A',
                 'createdBy' => $createdBy ? [
                     'id' => $createdBy->getId(),
                     'email' => $createdBy->getEmail()
@@ -404,6 +409,60 @@ final class ApiController extends AbstractController
     }
 
 
+    #[Route('/api/events/create', name: 'app_api_create_event', methods: ['POST'])]
+    public function createEvent(Request $request, EntityManagerInterface $em, ArtisteRepository $artisteRepository): JsonResponse
+    {
+        // Récupérer l'utilisateur connecté
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Not authenticated'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Récupérer les données envoyées dans la requête
+        $data = json_decode($request->getContent(), true);
+
+        // Vérifier que les données essentielles sont présentes
+        $name = $data['name'] ?? null;
+        $date = $data['date'] ?? null;
+
+        if (!$name || !$date) {
+            return new JsonResponse(['error' => 'Event name and date are required'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        // Créer un nouvel événement
+        $event = new Event();
+        $event->setName($name);
+        $event->setDate(new \DateTime($date));
+        $event->setCreator($user); // L'utilisateur connecté est le créateur
+
+        // Vérifier s'il y a un artiste associé
+        if (!empty($data['artistId'])) {
+            $artist = $artisteRepository->find($data['artistId']);
+            if (!$artist) {
+                return new JsonResponse(['error' => 'Artist not found'], JsonResponse::HTTP_BAD_REQUEST);
+            }
+            $event->setArtiste($artist);
+        }
+
+        // Enregistrer l'événement en base de données
+        $em->persist($event);
+        $em->flush();
+
+        // Retourner la réponse JSON avec l'événement créé
+        return new JsonResponse([
+            'message' => 'Event created successfully',
+            'event' => [
+                'id' => $event->getId(),
+                'name' => $event->getName(),
+                'date' => $event->getDate()->format('Y-m-d'),
+                'artistId' => $event->getArtiste() ? $event->getArtiste()->getId() : null,
+                'createdBy' => [
+                    'id' => $user->getUserIdentifier(),
+                    'email' => $user->getEmail(),
+                ],
+            ]
+        ], JsonResponse::HTTP_CREATED);
+    }
 
 
 

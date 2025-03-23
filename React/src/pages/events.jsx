@@ -6,6 +6,7 @@ function Events() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterDate, setFilterDate] = useState(""); // 📅 État pour stocker la date sélectionnée
+    const [artists, setArtists] = useState({});
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,12 +39,45 @@ function Events() {
                 }
                 return res.json();
             })
-            .then((data) => setEvents(data))
+            .then((data) => {
+                setEvents(data);
+                // Charger les artistes
+                loadArtists(data);
+            })
             .catch((error) => {
                 console.error("Erreur lors de la récupération des événements :", error);
                 navigate("/login");
             })
             .finally(() => setLoading(false));
+    };
+
+    // Charger le nom de l'artiste pour chaque événement
+    const loadArtists = (events) => {
+        const artistIds = events.map(event => event.artistId);
+        const uniqueArtistIds = [...new Set(artistIds)];
+
+        uniqueArtistIds.forEach((artistId) => {
+            fetchArtistName(artistId);
+        });
+    };
+
+    const fetchArtistName = (artistId) => {
+        const token = localStorage.getItem("authToken");
+
+        fetch(`http://127.0.0.1:8000/api/artists/${artistId}`, {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                setArtists((prev) => ({
+                    ...prev,
+                    [artistId]: data.name,
+                }));
+            })
+            .catch((error) => console.error("Erreur lors de la récupération des informations de l'artiste", error));
     };
 
     if (loading) return <p>Chargement...</p>;
@@ -59,6 +93,11 @@ function Events() {
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
             />
+
+            {/* ➕ Bouton pour créer un événement */}
+            <button className="btn btn-primary" onClick={() => navigate("/events/CreateEvent")}>
+                ➕ Créer un événement
+            </button>
 
             {events.length > 0 ? (
                 <table>
@@ -77,7 +116,7 @@ function Events() {
                         <tr key={event.id}>
                             <td>{event.id}</td>
                             <td>{event.createdBy?.email || "N/A"}</td>
-                            <td>{event.artistId}</td>
+                            <td>{event.artistName || "Chargement..."}</td>
                             <td>{event.name}</td>
                             <td>{event.date}</td>
                             <td>
