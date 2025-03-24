@@ -94,7 +94,7 @@ function Artists() {
                             <td>{artist.description}</td>
                             <td>
                                 {artist.imagePath ? (
-                                    <img src={`http://localhost:8000/${artist.imagePath}`} alt={artist.name} width="50" />
+                                    <img src={`http://localhost:8000/api/artists/${artist.imagePath}`} alt={artist.name} width="50" />
                                 ) : (
                                     '❌'
                                 )}

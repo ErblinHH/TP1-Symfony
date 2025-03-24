@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Events from "./pages/events.jsx";
 import Users from "./pages/users.jsx";
-import Artists from "./pages/artists.jsx";
+import Artists from "./pages/Artists.jsx";
 import HomePage from "./pages/homepage.jsx";
 import Login from "./pages/login.jsx";
 import Register from "./pages/register.jsx";

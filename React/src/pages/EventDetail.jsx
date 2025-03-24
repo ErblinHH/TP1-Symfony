@@ -143,7 +143,7 @@ function EventDetails() {
             {event.users && event.users.length > 0 ? (
                 <ul>
                     {event.users.map((u) => (
-                        <li key={u.id}>{u.username}</li>
+                        <li key={u.id}>{u.email}</li>
                     ))}
                 </ul>
             ) : (

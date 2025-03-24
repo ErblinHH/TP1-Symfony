@@ -5,7 +5,10 @@ import "./CSS/Artists.css";
 const EditArtist = () => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [imagePath, setImagePath] = useState("");
+    // Pour stocker le fichier uploadé
+    const [imageFile, setImageFile] = useState(null);
+    // Pour afficher l'image actuelle (URL reçue de l'API)
+    const [currentImage, setCurrentImage] = useState("");
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
@@ -15,17 +18,15 @@ const EditArtist = () => {
     useEffect(() => {
         const token = localStorage.getItem("authToken");
 
-        // Si aucun token n'est présent, rediriger vers la page de connexion
         if (!token) {
             navigate("/login");
             return;
         }
 
-        // Récupérer les données de l'artiste via l'API
         fetch(`http://127.0.0.1:8000/api/artists/${id}`, {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
             },
         })
             .then((res) => {
@@ -37,7 +38,7 @@ const EditArtist = () => {
             .then((data) => {
                 setName(data.name);
                 setDescription(data.description);
-                setImagePath(data.imagePath || "");
+                setCurrentImage(data.imagePath || "");
                 setLoading(false);
             })
             .catch((error) => {
@@ -51,24 +52,27 @@ const EditArtist = () => {
         e.preventDefault();
         const token = localStorage.getItem("authToken");
 
-        // Si aucun token n'est présent, rediriger vers la page de connexion
         if (!token) {
             navigate("/login");
             return;
+        }
+
+        // Préparer les données sous forme de FormData pour envoyer le fichier
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("description", description);
+        if (imageFile) {
+            formData.append("image", imageFile);
         }
 
         try {
             const response = await fetch(`http://127.0.0.1:8000/api/artists/${id}`, {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
+                    // Ne pas définir le Content-Type, le navigateur le fera automatiquement pour FormData
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({
-                    name,
-                    description,
-                    imagePath,
-                }),
+                body: formData,
             });
 
             if (!response.ok) {
@@ -105,18 +109,33 @@ const EditArtist = () => {
                     required
                 />
 
-                <label htmlFor="imagePath">Image (URL) :</label>
+                <label htmlFor="image">Image :</label>
                 <input
-                    type="text"
-                    id="imagePath"
-                    value={imagePath}
-                    onChange={(e) => setImagePath(e.target.value)}
+                    type="file"
+                    id="image"
+                    accept="image/png, image/jpg, image/jpeg"
+                    onChange={(e) => setImageFile(e.target.files[0])}
                 />
 
-                <button type="submit" className="btn">Sauvegarder les modifications</button>
+                {currentImage && (
+                    <div>
+                        <p>Image actuelle :</p>
+                        <img
+                            src={`http://localhost:8000${currentImage}`}
+                            alt="Current artist"
+                            width="100"
+                        />
+                    </div>
+                )}
+
+                <button type="submit" className="btn">
+                    Sauvegarder les modifications
+                </button>
             </form>
 
-            <a href="/artists" className="btn back">Retour à la liste des artistes</a>
+            <a href="/artists" className="btn back">
+                Retour à la liste des artistes
+            </a>
         </div>
     );
 };

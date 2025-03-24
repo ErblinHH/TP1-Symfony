@@ -48,7 +48,7 @@ final class ApiController extends AbstractController
 
         return $this->json($data);
     }
-    /*#[Route('/api/events/{id}', name: 'app_api_event_detail', methods: ['GET'])]
+    #[Route('/api/events/{id}', name: 'app_api_event_detail', methods: ['GET'])]
     public function getEvent(int $id, EventRepository $eventRepository): JsonResponse
     {
         $event = $eventRepository->find($id);
@@ -76,7 +76,7 @@ final class ApiController extends AbstractController
         ];
 
         return $this->json($data);
-    }*/
+    }
 
 
 
@@ -464,6 +464,20 @@ final class ApiController extends AbstractController
         ], JsonResponse::HTTP_CREATED);
     }
 
+
+    #[Route('/api/artists/{id}/image', name: 'app_api_get_image', methods: ['GET'])]
+    public function getImage(int $id, ArtisteRepository $artisteRepository): JsonResponse
+    {
+        $artist = $artisteRepository->find($id);
+
+        if (!$artist) {
+            return new JsonResponse(['error' => 'Artist not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return new JsonResponse([
+            'imagePath' => $artist->getImagePath()
+        ]);
+    }
 
 
 }
