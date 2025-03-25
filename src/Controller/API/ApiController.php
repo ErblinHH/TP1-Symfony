@@ -12,6 +12,7 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -186,7 +187,7 @@ final class ApiController extends AbstractController
 
         return new JsonResponse($data, Response::HTTP_OK);
     }
-    #[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
+
     #[Route('/api/events', name: 'app_api_events', methods: ['GET'])]
     public function getEvents(Request $request, EventRepository $eventRepository): JsonResponse
     {
@@ -224,7 +225,6 @@ final class ApiController extends AbstractController
         $name = $request->query->get('name'); // Récupère le paramètre GET "name"
 
         if ($name) {
-            // Rechercher des artistes qui contiennent le nom (insensible à la casse)
             $artists = $artisteRepository->createQueryBuilder('a')
                 ->where('LOWER(a.name) LIKE LOWER(:name)')
                 ->setParameter('name', '%' . $name . '%')
@@ -279,6 +279,19 @@ final class ApiController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
+    //TODO : Supprimer un artiste
+    #[Route('/api/artists/{id}/delete', name: 'app_api_artist_delete', methods: ['GET'])]
+    public function deleteArtist()
+    {
+        $user = $this->getUser();
+
+        // 🚨 Vérification : Seuls les admins peuvent supprimer un artist
+        if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
+            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+    }
+
     #[Route('/api/artists/{id}', name: 'app_api_artist_update', methods: ['PUT'])]
     public function updateArtist(
         int $id,
@@ -288,9 +301,9 @@ final class ApiController extends AbstractController
     ): JsonResponse {
         $user = $this->getUser();
 
-        // 🚨 Vérification : Seuls les admins peuvent modifier un artiste
+        // seuls les admins peuvent modifier un artiste
         if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
-            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
         }
 
         $artist = $artisteRepository->find($id);
@@ -298,28 +311,49 @@ final class ApiController extends AbstractController
             return new JsonResponse(['error' => 'Artist not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $data = json_decode($request->getContent(), true);
-
+        // Récupération des champs textuels depuis le FormData
+        $data = $request->request->all();
         if (isset($data['name'])) {
             $artist->setName($data['name']);
         }
+
         if (isset($data['description'])) {
             $artist->setDescription($data['description']);
         }
-        if (isset($data['imagePath'])) {
-            $artist->setImagePath($data['imagePath']);
+
+        // Gestion d'upload d'image
+        $file = $request->files->get('image');
+        if ($file) {
+
+         /*   // Vérifier le type de fichier
+            if (!in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/jpg'])) {
+                return new JsonResponse(['error' => 'Invalid file type'], Response::HTTP_BAD_REQUEST);
+            }*/
+
+            // Définir le dossier de destination dans /public/ArtistImage
+            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/ArtistImage';
+            try {
+                // Déplacer le fichier dans le dossier de destination
+                $file->move($uploadDir, $file);
+            } catch (FileException $e) {
+                return new JsonResponse(['error' => 'Could not save the image: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            // Enregistrer l'URL relative dans la BDD
+            $artist->setImagePath('/public/ArtistImage/' . $file);
         }
 
         $em->persist($artist);
         $em->flush();
 
-        return $this->json([
+        return new JsonResponse([
             'id' => $artist->getId(),
             'name' => $artist->getName(),
             'description' => $artist->getDescription(),
             'imagePath' => $artist->getImagePath(),
         ]);
     }
+
 
     #[Route('/api/events/{id}/signup', name: 'app_api_event_signup', methods: ['POST'])]
     public function signupEvent(
@@ -424,6 +458,7 @@ final class ApiController extends AbstractController
         // Vérifier que les données essentielles sont présentes
         $name = $data['name'] ?? null;
         $date = $data['date'] ?? null;
+        $artistId = $data['artistId'] ?? null; // On attend l'ID de l'artiste
 
         if (!$name || !$date) {
             return new JsonResponse(['error' => 'Event name and date are required'], JsonResponse::HTTP_BAD_REQUEST);
@@ -436,8 +471,8 @@ final class ApiController extends AbstractController
         $event->setCreator($user); // L'utilisateur connecté est le créateur
 
         // Vérifier s'il y a un artiste associé
-        if (!empty($data['artistId'])) {
-            $artist = $artisteRepository->find($data['artistId']);
+        if ($artistId) {
+            $artist = $artisteRepository->find($artistId);
             if (!$artist) {
                 return new JsonResponse(['error' => 'Artist not found'], JsonResponse::HTTP_BAD_REQUEST);
             }
@@ -455,28 +490,13 @@ final class ApiController extends AbstractController
                 'id' => $event->getId(),
                 'name' => $event->getName(),
                 'date' => $event->getDate()->format('Y-m-d'),
-                'artistId' => $event->getArtiste() ? $event->getArtiste()->getId() : null,
+                'artistName' => $artist ? $artist->getName() : null,
                 'createdBy' => [
                     'id' => $user->getUserIdentifier(),
                     'email' => $user->getEmail(),
                 ],
             ]
         ], JsonResponse::HTTP_CREATED);
-    }
-
-
-    #[Route('/api/artists/{id}/image', name: 'app_api_get_image', methods: ['GET'])]
-    public function getImage(int $id, ArtisteRepository $artisteRepository): JsonResponse
-    {
-        $artist = $artisteRepository->find($id);
-
-        if (!$artist) {
-            return new JsonResponse(['error' => 'Artist not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        return new JsonResponse([
-            'imagePath' => $artist->getImagePath()
-        ]);
     }
 
 
