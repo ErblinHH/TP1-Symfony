@@ -1,4 +1,3 @@
-
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
@@ -27,3 +26,27 @@
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
+
+###> ReactJS ###
+/node_modules/
+/build/
+/dist/
+/public/static/
+/.env.local
+/.eslintcache
+/.parcel-cache
+/yarn-error.log
+/npm-debug.log
+###< ReactJS ###
+
+###> Doctrine ###
+/migrations/
+/var/cache/
+/var/logs/
+/var/sessions/
+###< Doctrine ###
+
+# Fichiers et dossiers d'IDE
+/.idea/
+/*.iml
+/.vscode/
