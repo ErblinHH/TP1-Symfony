@@ -171,7 +171,7 @@ function EventDetails() {
                 )}
             </div>
 
-            <a href="/events" className="btn">
+            <a href="/Users/blini/Desktop/TP1-Symfony/React/src/pages/Events" className="btn">
                 Retour à la liste des évènements
             </a>
         </div>

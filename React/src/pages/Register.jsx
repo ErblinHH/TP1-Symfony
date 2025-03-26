@@ -60,7 +60,7 @@ const Register = () => {
                 </button>
             </form>
             <p>
-                Déjà inscrit ? <a href="/login">Connecte-toi ici</a>.
+                Déjà inscrit ? <a href="/Users/blini/Desktop/TP1-Symfony/React/src/pages/Login">Connecte-toi ici</a>.
             </p>
         </div>
     );

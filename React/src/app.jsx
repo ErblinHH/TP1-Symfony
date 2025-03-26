@@ -1,11 +1,11 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Events from "./pages/events.jsx";
-import Users from "./pages/users.jsx";
+import Events from "./pages/Events.jsx";
+import Users from "./pages/Users.jsx";
 import Artists from "./pages/Artists.jsx";
-import HomePage from "./pages/homepage.jsx";
-import Login from "./pages/login.jsx";
-import Register from "./pages/register.jsx";
+import Homepage from "./pages/Homepage.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
 import CreateArtist from "./pages/CreateArtist.jsx";
 import EditArtist from "./pages/EditArtist.jsx";
 import EventDetails from "./pages/EventDetail.jsx";
@@ -18,7 +18,7 @@ const App = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<HomePage />} />
+                <Route path="/" element={<Homepage />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/artists" element={<Artists />} />

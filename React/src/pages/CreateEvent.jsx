@@ -11,7 +11,7 @@ function CreateEvent() {
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
 
-    // Vérifier l'authentification et le rôle de l'utilisateur
+    // Vérifier l'authentification
     useEffect(() => {
         const token = localStorage.getItem("authToken");
 
@@ -20,18 +20,17 @@ function CreateEvent() {
             return;
         }
 
-        // Récupérer l'utilisateur connecté
+        // Récupérer l'utilisateur connecté sans vérifier le rôle admin
         fetch("http://127.0.0.1:8000/api/me", {
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`,
             },
         })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-                if (!data || !data.roles.includes("ROLE_ADMIN")) {
-                    // Rediriger si l'utilisateur n'est pas admin
-                    navigate("/events");
+            .then((res) => (res.ok ? res.json() : null))
+            .then((data) => {
+                if (!data) {
+                    navigate("/login");
                     return;
                 }
                 setUser(data);
@@ -54,7 +53,9 @@ function CreateEvent() {
                 return res.json();
             })
             .then((data) => setArtists(data))
-            .catch((err) => console.error("Erreur de chargement des artistes :", err));
+            .catch((err) =>
+                console.error("Erreur de chargement des artistes :", err)
+            );
     }, []);
 
     const handleSubmit = (e) => {
@@ -81,7 +82,8 @@ function CreateEvent() {
             body: JSON.stringify(eventData),
         })
             .then((res) => {
-                if (!res.ok) throw new Error("Erreur lors de la création de l'événement");
+                if (!res.ok)
+                    throw new Error("Erreur lors de la création de l'événement");
                 return res.json();
             })
             .then(() => {

@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./CSS/HomePage.css";
 
-const HomePage = () => {
+const Homepage = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem("authToken"); // Vérifier si un token existe
     const [user, setUser] = useState(null);
@@ -62,4 +63,4 @@ const HomePage = () => {
     );
 };
 
-export default HomePage;
+export default Homepage;
