@@ -124,7 +124,7 @@ function EventDetails() {
     // Détermine si l'utilisateur connecté est le créateur de l'évènement
     const isCreator = user && event.createdBy && user.id === event.createdBy.id;
     // Détermine si l'utilisateur est déjà inscrit
-    const isRegistered = event.users && user && event.users.some((u) => u.id === user.id);
+    const isRegistered = Array.isArray(event.users) && user && event.users.some((u) => u.id === user.id);
 
     return (
         <div className="container">

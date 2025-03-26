@@ -66,7 +66,7 @@ function Artists() {
                 className="search-input"
             />
 
-            {/* Affichage du bouton "Créer un artiste" uniquement si l'utilisateur est admin */}
+            {/* affiche Crée un artiste que si on est admin */}
             {isAdmin && (
                 <div className="actions">
                     <button onClick={() => navigate("/artists/createArtist")} className="btn btn-create">
@@ -79,7 +79,6 @@ function Artists() {
                 <table>
                     <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Nom</th>
                         <th>Description</th>
                         <th>Image</th>
@@ -89,18 +88,18 @@ function Artists() {
                     <tbody>
                     {artists.map(artist => (
                         <tr key={artist.id}>
-                            <td>{artist.id}</td>
                             <td>{artist.name}</td>
                             <td>{artist.description}</td>
                             <td>
                                 {artist.imagePath ? (
-                                    <img src={`http://localhost:8000/api/artists/${artist.imagePath}`} alt={artist.name} width="50" />
+                                    <img src={`http://localhost:8000${artist.imagePath}`} alt={artist.name} width="50" />
                                 ) : (
                                     '❌'
                                 )}
                             </td>
                             <td>
-                                {/* Affichage du bouton "Modifier" uniquement si l'utilisateur est admin */}
+                                {/* affiche le boutton modifier que si on est admin */}
+
                                 {isAdmin && (
                                     <Link to={`/artists/edit/${artist.id}`} className="btn btn-small">Modifier</Link>
                                 )}

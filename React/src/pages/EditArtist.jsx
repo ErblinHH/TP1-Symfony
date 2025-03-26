@@ -6,7 +6,6 @@ const EditArtist = () => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [imageFile, setImageFile] = useState(null);
-
     const [currentImage, setCurrentImage] = useState("");
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -16,7 +15,6 @@ const EditArtist = () => {
     // Charger les données de l'artiste
     useEffect(() => {
         const token = localStorage.getItem("authToken");
-
         if (!token) {
             navigate("/login");
             return;
@@ -50,13 +48,12 @@ const EditArtist = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const token = localStorage.getItem("authToken");
-
         if (!token) {
             navigate("/login");
             return;
         }
 
-        // Préparer les données sous forme de FormData pour envoyer le fichier
+        // Préparer les données sous forme de FormData
         const formData = new FormData();
         formData.append("name", name);
         formData.append("description", description);
@@ -66,10 +63,10 @@ const EditArtist = () => {
 
         try {
             const response = await fetch(`http://127.0.0.1:8000/api/artists/${id}`, {
-                method: "PUT",
+                method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    ContentType: "multipart/form-data",
+                    // Supprimez la ligne Content-Type pour laisser le navigateur la définir correctement
                 },
                 body: formData,
             });
@@ -78,7 +75,7 @@ const EditArtist = () => {
                 throw new Error("Erreur lors de la modification de l'artiste.");
             }
 
-            navigate("/artists"); // Redirige vers la liste des artistes après la modification
+            navigate("/artists");
         } catch (err) {
             setError(err.message);
         }

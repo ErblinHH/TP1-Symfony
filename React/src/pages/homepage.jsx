@@ -22,7 +22,7 @@ const HomePage = () => {
 
     return (
         <div className="homepage">
-            <h1>🎧 Bienvenue sur MusicFlow 🎧</h1>
+            <h1>🎧 Bienvenue sur Wishify🎧</h1>
             <p>Le site qui vous connecte à la musique !</p>
 
             <div className="buttons">
