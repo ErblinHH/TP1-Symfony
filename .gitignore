@@ -46,6 +46,9 @@
 /var/sessions/
 ###< Doctrine ###
 
+# Ignorer les photos des artistes
+/public/artistImage/
+
 # Fichiers et dossiers d'IDE
 /.idea/
 /*.iml
