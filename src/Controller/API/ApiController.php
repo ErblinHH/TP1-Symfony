@@ -279,19 +279,6 @@ final class ApiController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    //TODO : Supprimer un artiste
-    #[Route('/api/artists/{id}/delete', name: 'app_api_artist_delete', methods: ['GET'])]
-    public function deleteArtist()
-    {
-        $user = $this->getUser();
-
-        // 🚨 Vérification : Seuls les admins peuvent supprimer un artist
-        if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
-            return new JsonResponse(['error' => 'Unauthorized'], JsonResponse::HTTP_UNAUTHORIZED);
-        }
-
-    }
-
     #[Route('/api/artists/{id}', name: 'app_api_artist_update', methods: ['PUT'])]
     public function updateArtist(
         int $id,
@@ -301,7 +288,7 @@ final class ApiController extends AbstractController
     ): JsonResponse {
         $user = $this->getUser();
 
-        // seuls les admins peuvent modifier un artiste
+        // Vérifier si l'utilisateur est admin
         if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
             return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
         }
@@ -311,48 +298,53 @@ final class ApiController extends AbstractController
             return new JsonResponse(['error' => 'Artist not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Récupération des champs textuels depuis le FormData
+        // Récupération des données depuis le FormData
         $data = $request->request->all();
+        $updatedData = [
+            'name' => $data['name'] ?? $artist->getName(),
+            'description' => $data['description'] ?? $artist->getDescription(),
+            'imagePath' => $artist->getImagePath(),
+            'imageType' => null,
+            'uploadedFileName' => null
+        ];
+
         if (isset($data['name'])) {
             $artist->setName($data['name']);
         }
-
         if (isset($data['description'])) {
             $artist->setDescription($data['description']);
         }
 
-        // Gestion d'upload d'image
         $file = $request->files->get('image');
+
+
         if ($file) {
+            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/artistImage';
+            $newFilename = uniqid() . '.' . $file->guessExtension();
+            $targetPath = $uploadDir . '/' . $newFilename;
 
-         /*   // Vérifier le type de fichier
-            if (!in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/jpg'])) {
-                return new JsonResponse(['error' => 'Invalid file type'], Response::HTTP_BAD_REQUEST);
-            }*/
-
-            // Définir le dossier de destination dans /public/ArtistImage
-            $uploadDir = $this->getParameter('kernel.project_dir') . '/public/ArtistImage';
+            $em->persist($artist);
+            $em->flush();
             try {
-                // Déplacer le fichier dans le dossier de destination
-                $file->move($uploadDir, $file);
+                $file->move($uploadDir, $newFilename);
+
+                if (!file_exists($targetPath)) {
+                    return new JsonResponse(['error' => 'Fichier introuvable après l\'upload'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+                $updatedData['imagePath'] = '/artistImage/' . $newFilename;
+                $updatedData['imageType'] = $file->getMimeType();
+                $updatedData['uploadedFileName'] = $file->getClientOriginalName();
+
+                $artist->setImagePath('/artistImage/' . $newFilename);
             } catch (FileException $e) {
                 return new JsonResponse(['error' => 'Could not save the image: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
-
-            // Enregistrer l'URL relative dans la BDD
-            $artist->setImagePath('/public/ArtistImage/' . $file);
         }
 
-        $em->persist($artist);
-        $em->flush();
-
-        return new JsonResponse([
-            'id' => $artist->getId(),
-            'name' => $artist->getName(),
-            'description' => $artist->getDescription(),
-            'imagePath' => $artist->getImagePath(),
-        ]);
+        return new JsonResponse($updatedData);
     }
+
+
 
 
     #[Route('/api/events/{id}/signup', name: 'app_api_event_signup', methods: ['POST'])]

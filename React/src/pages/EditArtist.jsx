@@ -5,9 +5,8 @@ import "./CSS/Artists.css";
 const EditArtist = () => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    // Pour stocker le fichier uploadé
     const [imageFile, setImageFile] = useState(null);
-    // Pour afficher l'image actuelle (URL reçue de l'API)
+
     const [currentImage, setCurrentImage] = useState("");
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -69,8 +68,8 @@ const EditArtist = () => {
             const response = await fetch(`http://127.0.0.1:8000/api/artists/${id}`, {
                 method: "PUT",
                 headers: {
-                    // Ne pas définir le Content-Type, le navigateur le fera automatiquement pour FormData
                     Authorization: `Bearer ${token}`,
+                    ContentType: "multipart/form-data",
                 },
                 body: formData,
             });
@@ -114,15 +113,30 @@ const EditArtist = () => {
                     type="file"
                     id="image"
                     accept="image/png, image/jpg, image/jpeg"
-                    onChange={(e) => setImageFile(e.target.files[0])}
+                    onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                            setImageFile(e.target.files[0]);
+                        }
+                    }}
                 />
 
-                {currentImage && (
+                {currentImage && !imageFile && (
                     <div>
                         <p>Image actuelle :</p>
                         <img
                             src={`http://localhost:8000${currentImage}`}
                             alt="Current artist"
+                            width="100"
+                        />
+                    </div>
+                )}
+
+                {imageFile && (
+                    <div>
+                        <p>Aperçu de l'image sélectionnée :</p>
+                        <img
+                            src={URL.createObjectURL(imageFile)}
+                            alt="Preview"
                             width="100"
                         />
                     </div>

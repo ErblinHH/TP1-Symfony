@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import "./CSS/CreateArtist.css";
 
 function CreateArtist() {
-    console.log(("CreateArtist.jsx: CreateArtist()"));
+    console.log("CreateArtist.jsx: CreateArtist()");
+
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
-    const [imagePath, setImagePath] = useState("");
-    const [user, setUser] = useState(null);
+    const [imageFile, setImageFile] = useState(null); // Fichier image sélectionné
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const navigate = useNavigate();
@@ -20,19 +20,17 @@ function CreateArtist() {
             return;
         }
 
-        // Récupérer l'utilisateur connecté
         fetch("http://127.0.0.1:8000/api/me", {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
+                Authorization: `Bearer ${token}`,
             },
         })
             .then(res => res.ok ? res.json() : null)
             .then(data => {
                 if (!data || !data.roles.includes("ROLE_ADMIN")) {
-                    navigate("/artists"); // Rediriger si pas admin
+                    navigate("/artists");
                 }
-                setUser(data);
             })
             .catch(() => navigate("/artists"));
     }, [navigate]);
@@ -49,16 +47,20 @@ function CreateArtist() {
 
         const token = localStorage.getItem("authToken");
 
-        const artistData = { name, description, imagePath };
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("description", description);
+        if (imageFile) {
+            formData.append("image", imageFile);
+        }
 
         try {
             const response = await fetch("http://127.0.0.1:8000/api/artists/create", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(artistData),
+                body: formData,
             });
 
             if (!response.ok) {
@@ -66,17 +68,15 @@ function CreateArtist() {
             }
 
             setSuccess("Artiste créé avec succès !");
-            setTimeout(() => navigate("/artists"), 2000); // Redirection après succès
+            setTimeout(() => navigate("/artists"), 2000);
         } catch (error) {
             setError(error.message);
         }
     };
 
-    if (!user) return <p>Chargement...</p>;
-
     return (
         <div className="create-artist-container">
-            <h1>🎤 Ajouter un nouvel artiste 🎤</h1>
+            <h1>🎤 Ajouter un artiste</h1>
 
             {error && <p className="error">{error}</p>}
             {success && <p className="success">{success}</p>}
@@ -97,12 +97,27 @@ function CreateArtist() {
                     required
                 ></textarea>
 
-                <label>URL de l'image (optionnel) :</label>
+                <label>Image :</label>
                 <input
-                    type="text"
-                    value={imagePath}
-                    onChange={(e) => setImagePath(e.target.value)}
+                    type="file"
+                    accept="image/png, image/jpg, image/jpeg"
+                    onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                            setImageFile(e.target.files[0]);
+                        }
+                    }}
                 />
+
+                {imageFile && (
+                    <div>
+                        <p>Aperçu de l'image sélectionnée :</p>
+                        <img
+                            src={URL.createObjectURL(imageFile)}
+                            alt="Preview"
+                            width="100"
+                        />
+                    </div>
+                )}
 
                 <button type="submit" className="btn">Créer</button>
                 <button type="button" className="btn btn-secondary" onClick={() => navigate("/artists")}>
