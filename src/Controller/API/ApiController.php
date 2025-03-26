@@ -507,4 +507,63 @@ final class ApiController extends AbstractController
 
         return $this->json($data);
     }
+
+    #[Route('/api/events/{id}', name: 'app_api_update_event', methods: ['PUT'])]
+    public function updateEvent(
+        int $id,
+        Request $request,
+        EventRepository $eventRepository,
+        ArtisteRepository $artisteRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        // Vérifier que l'utilisateur est authentifié
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Récupérer l'événement à mettre à jour
+        $event = $eventRepository->find($id);
+        if (!$event) {
+            return new JsonResponse(['error' => 'Event not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if (!in_array('ROLE_ADMIN', $user->getRoles()) && $event->getCreator() !== $user) {
+            return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Récupérer les données envoyées en JSON
+        $data = json_decode($request->getContent(), true);
+        if (!$data) {
+            return new JsonResponse(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Mise à jour des propriétés de l'événement
+        if (isset($data['name'])) {
+            $event->setName($data['name']);
+        }
+
+        if (isset($data['date'])) {
+            try {
+                $date = new \DateTime($data['date']);
+                $event->setDate($date);
+            } catch (\Exception $e) {
+                return new JsonResponse(['error' => 'Invalid date format'], Response::HTTP_BAD_REQUEST);
+            }
+        }
+
+        if (isset($data['artistId'])) {
+            $artist = $artisteRepository->find($data['artistId']);
+            if (!$artist) {
+                return new JsonResponse(['error' => 'Artist not found'], Response::HTTP_BAD_REQUEST);
+            }
+            $event->setArtiste($artist);
+        }
+
+        $em->persist($event);
+        $em->flush();
+
+        return new JsonResponse(['message' => 'Event updated successfully'], Response::HTTP_OK);
+    }
+
 }

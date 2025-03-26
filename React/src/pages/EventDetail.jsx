@@ -153,7 +153,7 @@ function EventDetails() {
             <div className="actions">
                 {isCreator ? (
                     <>
-                        <button className="btn" onClick={() => navigate(`/events/${id}/edit`)}>
+                        <button className="btn" onClick={() => navigate(`/events/edit/${id}`)}>
                             Modifier l'évènement
                         </button>
                         <button className="btn btn-secondary" onClick={handleDelete}>

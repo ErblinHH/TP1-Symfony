@@ -10,6 +10,7 @@ import CreateArtist from "./pages/CreateArtist.jsx";
 import EditArtist from "./pages/EditArtist.jsx";
 import EventDetails from "./pages/EventDetail.jsx";
 import CreateEvent from "./pages/CreateEvent.jsx";
+import EditEvents from "./pages/EditEvents.jsx";
 
 const NotFound = () => <h1 style={{ textAlign: "center", marginTop: "20px", color: "red" }}>🚨 Erreur 404 - Page introuvable 🚨</h1>;
 
@@ -27,6 +28,7 @@ const App = () => {
                 <Route path="/events/:id" element={<EventDetails />} />
                 <Route path="/artists/createArtist" element={<CreateArtist />} />
                 <Route path="/events/createEvent" element={<CreateEvent />} />
+                <Route path="/events/edit/:id" element={<EditEvents />} />
 
                 <Route path="*" element={<NotFound />} />
 
