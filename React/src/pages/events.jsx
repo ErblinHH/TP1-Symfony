@@ -1,27 +1,36 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './Artists.css'; // Mettez à jour avec le bon fichier CSS
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./CSS/Artists.css"; // Mettez à jour avec le bon fichier CSS
 
 function Events() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filterDate, setFilterDate] = useState(""); // 📅 État pour stocker la date sélectionnée
+    const [artists, setArtists] = useState({});
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Récupérer le token JWT depuis le localStorage
+        fetchEvents();
+    }, [filterDate]); // 🔄 Rafraîchir la liste quand la date change
+
+    const fetchEvents = () => {
         const token = localStorage.getItem("authToken");
 
-        // Si aucun token n'est présent, rediriger vers la page de connexion
         if (!token) {
             navigate("/login");
             return;
         }
 
-        // Faire la requête vers l'endpoint /api/events en incluant le token dans les headers
-        fetch('http://127.0.0.1:8000/api/events', {
+        // Construire l'URL avec le filtre (si une date est sélectionnée)
+        let url = "http://127.0.0.1:8000/api/events";
+        if (filterDate) {
+            url += `?date=${filterDate}`;
+        }
+
+        fetch(url, {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
+                "Authorization": `Bearer ${token}`,
             },
         })
             .then((res) => {
@@ -30,20 +39,65 @@ function Events() {
                 }
                 return res.json();
             })
-            .then((data) => setEvents(data))
+            .then((data) => {
+                setEvents(data);
+                // Charger les artistes
+                loadArtists(data);
+            })
             .catch((error) => {
                 console.error("Erreur lors de la récupération des événements :", error);
-                // Optionnel : rediriger vers la page de login si le token est invalide ou expiré
                 navigate("/login");
             })
             .finally(() => setLoading(false));
-    }, [navigate]);
+    };
+
+    // Charger le nom de l'artiste pour chaque événement
+    const loadArtists = (events) => {
+        const artistIds = events.map(event => event.artistId);
+        const uniqueArtistIds = [...new Set(artistIds)];
+
+        uniqueArtistIds.forEach((artistId) => {
+            fetchArtistName(artistId);
+        });
+    };
+
+    const fetchArtistName = (artistId) => {
+        const token = localStorage.getItem("authToken");
+
+        fetch(`http://127.0.0.1:8000/api/artists/${artistId}`, {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            },
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                setArtists((prev) => ({
+                    ...prev,
+                    [artistId]: data.name,
+                }));
+            })
+            .catch((error) => console.error("Erreur lors de la récupération des informations de l'artiste", error));
+    };
 
     if (loading) return <p>Chargement...</p>;
 
     return (
         <div className="container">
             <h1>🎨 Liste des événements 🎨</h1>
+
+            {/* 📅 Sélecteur de date */}
+            <label>Filtrer par date :</label>
+            <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+            />
+
+            {/* ➕ Bouton pour créer un événement */}
+            <button className="btn btn-primary" onClick={() => navigate("/events/CreateEvent")}>
+                ➕ Créer un événement
+            </button>
 
             {events.length > 0 ? (
                 <table>
@@ -61,8 +115,8 @@ function Events() {
                     {events.map((event) => (
                         <tr key={event.id}>
                             <td>{event.id}</td>
-                            <td>{event.creator_id}</td>
-                            <td>{event.artiste_id}</td>
+                            <td>{event.createdBy?.email || "N/A"}</td>
+                            <td>{event.artistName || "Chargement..."}</td>
                             <td>{event.name}</td>
                             <td>{event.date}</td>
                             <td>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Register.css"; // Crée ou adapte le fichier CSS selon tes besoins
+import "./CSS/Register.css"; // Crée ou adapte le fichier CSS selon tes besoins
 
 const Register = () => {
     const [email, setEmail] = useState("");

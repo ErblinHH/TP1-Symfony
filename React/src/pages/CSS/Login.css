@@ -1,0 +1,73 @@
+.login-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+}
+
+label {
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+input {
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.buttons-container {
+    display: flex;
+    justify-content: space-between; /* Espace entre les deux boutons */
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+.register {
+    background-color: #28a745; /* Vert pour le bouton d'inscription */
+}
+
+.register:hover {
+    background-color: #218838; /* Vert plus foncé pour l'état hover */
+}
+
+.back {
+    margin-top: 20px;
+    display: inline-block;
+    text-decoration: none;
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.back:hover {
+    background-color: #5a6268;
+}

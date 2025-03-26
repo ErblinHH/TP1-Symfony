@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Login.css"; // Fichier CSS pour le style
+import "./CSS/Login.css"; // Fichier CSS pour le style
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -66,7 +66,17 @@ const Login = () => {
                     required
                 />
 
-                <button type="submit" className="btn">Connexion</button>
+                <div className="buttons-container">
+                    <button type="submit" className="btn">Connexion</button>
+
+                    {/* Bouton pour rediriger vers la page d'inscription */}
+                    <button
+                        onClick={() => navigate("/register")}
+                        className="btn register"
+                    >
+                        S'inscrire
+                    </button>
+                </div>
             </form>
 
             <a href="/" className="btn back">Retour à l'accueil</a>
